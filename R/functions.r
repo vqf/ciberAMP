@@ -79,3 +79,20 @@
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
   return(dataDEGs)
 }
+
+.getDataDEGs.scnavsdip <- function(dataFilt, FDR.DEA, FC, pat.dip, pat.scna){
+
+
+  
+  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, intersect(colnames(dataFilt), pat.dip)],
+                                            mat2 = dataFilt[, intersect(colnames(dataFilt), pat.scna)],
+                                            metadata = FALSE,
+                                            Cond1type = "Diploid",
+                                            Cond2type = "SCNA",
+                                            fdr.cut = filt.FDR.DEA,
+                                            logFC.cut = filt.FC,
+                                            method = dea.method)
+
+  dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
+  return(dataDEGs)
+}
