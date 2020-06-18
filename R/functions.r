@@ -84,8 +84,8 @@
 
 
   
-  dataDEGs.scnavsdip <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, intersect(colnames(dataFilt), pat.dip)],
-                                            mat2 = dataFilt[, intersect(colnames(dataFilt), pat.scna)],
+  dataDEGs.scnavsdip <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[gene, intersect(colnames(dataFilt), pat.dip), drop = FALSE],
+                                            mat2 = dataFilt[gene, intersect(colnames(dataFilt), pat.scna), drop = FALSE],
                                             metadata = FALSE,
                                             Cond1type = "Diploid",
                                             Cond2type = "SCNA",
