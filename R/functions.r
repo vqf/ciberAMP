@@ -19,20 +19,6 @@
   return(result)
 }
 
-.downloadExpression <- function(tumor){
-  cohort <- paste("TCGA-", tumor, sep="")
-  query <- TCGAbiolinks::GDCquery(project = cohort,
-                                  legacy = TRUE,
-                                  data.category = "Gene expression",
-                                  data.type = "Gene expression quantification",
-                                  platform = "Illumina HiSeq",
-                                  file.type = "results",
-                                  experimental.strategy = "RNA-Seq",
-                                  sample.type = c("Primary Tumor", "Solid Tissue Normal"))
-  TCGAbiolinks::GDCdownload(query)
-
-  tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
-  return(tumor.exp)
 }
 
 .filterExpression <- function(tumor, sign, object, cor.cut, norm.method, filt.method,
