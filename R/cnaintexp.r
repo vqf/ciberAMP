@@ -111,8 +111,6 @@ CNAintEXP <- function(genes = c(),
       dataFilt <- exp.mat
     }
 
-        dataFilt <- .log2(dataFilt)
-        colnames(dataFilt) <- substr(colnames(dataFilt), start = 1, stop = 12)
 
 
       }
