@@ -111,6 +111,7 @@
   return(dataFilt)
 }
 
+# This function compares tumor vs normal expression differences and uses "edgeR::exactTest" function to assign significance to those comparisons: finds differentially expressed genes (DEGs)
 .getDataDEGs <- function(dataFilt, FDR.DEA, FC){
 
 
