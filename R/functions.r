@@ -144,16 +144,3 @@
 }
 
 
-
-  dataDEGs.scnavsdip <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[gene, intersect(colnames(dataFilt), pat.dip), drop = FALSE],
-                                            mat2 = dataFilt[gene, intersect(colnames(dataFilt), pat.scna), drop = FALSE],
-                                            metadata = FALSE,
-                                            Cond1type = "Diploid",
-                                            Cond2type = "SCNA",
-                                            fdr.cut = filt.FDR.DEA,
-                                            logFC.cut = filt.FC,
-                                            method = dea.method)
-
-  dataDEGs.scnavsdip$Tumor <- rep(tumor, times = nrow(dataDEGs))
-  return(dataDEGs)
-}
