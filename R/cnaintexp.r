@@ -89,7 +89,6 @@ CNAintEXP <- function(genes = c(),
     if(tumor %in% tumors) {
       print(paste("Analyzing ", tumor, "...", sep=""))
     }else{
-      print(paste("The introduced cohort: ", tumor, " was not found among the available TCGA cohorts. Spelling is a common mistake, please check it or select any of the available ones.", sep=""))
       next
     }
     final.col.names <- c("SYMBOL", "P.VAL", "CNA.FC", "PATIENTS.PERCENTAGE","COND", "TEST", "TUMOR", "PAT.ID")
