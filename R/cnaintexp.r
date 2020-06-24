@@ -105,6 +105,11 @@ CNAintEXP <- function(genes = c(),
         dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
 
         write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
+      }
+    }else{
+      # If the user provides an expression matrix as indicated...
+      dataFilt <- exp.mat
+    }
 
         dataFilt <- .log2(dataFilt)
         colnames(dataFilt) <- substr(colnames(dataFilt), start = 1, stop = 12)
