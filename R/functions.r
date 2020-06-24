@@ -35,7 +35,8 @@
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
     return(tumor.exp)
-  }else if(tumor == c("SKCM") {
+  }
+  else if(tumor == "SKCM") {
     # If tumor is SKCM cohort, then "sample.type" argument should be specified for only primary tumors --> in this cohort there are many metastatic samples which are going to be analyzed  <-- SHOULD WE GIVE THE PEOPLE OPTION TO exCLUDE THEM???
     cohort <- paste("TCGA-", tumor, sep="")
     query <- TCGAbiolinks::GDCquery(project = cohort,
@@ -51,7 +52,8 @@
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
     return(tumor.exp)
 
-  }else if(tumor == c("LAML")) {
+  }
+  else if(tumor == "LAML") {
     # If tumor is SKCM cohort, then "sample.type" argument should be specified since this is a blood type malignancy.
     cohort <- paste("TCGA-", tumor, sep="")
     query <- TCGAbiolinks::GDCquery(project = cohort,
@@ -67,7 +69,8 @@
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
     return(tumor.exp)
 
-  }else if(tumor %in% tumors) {
+  }
+  else if(tumor %in% tumors) {
     # In any other case, if the user's "cohorts" input is valid (exists in TCGA), then this will be a non-normal sample cohort and this is specified in "sample.type" argument as well.
     cohort <- paste("TCGA-", tumor, sep="")
     query <- TCGAbiolinks::GDCquery(project = cohort,
@@ -142,4 +145,172 @@
 
 }
 
+# This function splits cohort by a gene's copy number in three groups: del, amp and neutro (diploid)
+.selectDel <- function(new, cna.thr) {
+  if(cna.thr == "Deep") {
+    group.del <- new[new[,2] == -2, ]
+    return(group.del)
+  }else if(cna.thr == "Shallow") {
+    group.del <- new[new[,2] == -1, ]
+    return(group.del)
+  }else if(cna.thr == "Both"){
+    group.del <- new[new[,2] <= -1, ]
+    return(group.del)
+  }
+}
+
+.selectAmp <- function(new, cna.thr) {
+  if(cna.thr == "Deep") {
+    group.amp <- new[new[,2] == 2, ]
+    return(group.amp)
+  }else if(cna.thr == "Shallow") {
+    group.amp <- new[new[,2] == 1, ]
+    return(group.amp)
+  }else if(cna.thr == "Both"){
+    group.amp <- new[new[,2] >= 1, ]
+    return(group.amp)
+  }
+}
+
+.selectDiploid <- function(new, cna.thr) {
+  if(cna.thr == "Deep") {
+    group.neutro <- new[new[,2] == 0, ]
+    return(group.neutro)
+  }else if(cna.thr == "Shallow") {
+    group.neutro <- new[new[,2] == 0, ]
+    return(group.neutro)
+  }else if(cna.thr == "Both"){
+    group.neutro <- new[new[,2] == 0, ]
+    return(group.neutro)
+  }
+}
+
+# This function sets the minimum number of patients to be analyzed
+.setMinPat <- function(new, pat.percentage) {
+  min <- (nrow(new) * pat.percentage)/100
+  if(min >= 3) {
+    minimum.patients <- minimum.patients
+  }else if(min < 3){
+    minimum.patients <- 3
+  }
+  retunr(min)
+}
+
+# This function returns if analysis will continue by group.x <- group.amp or group.x <- group.del
+.setGroupX <- function(group.del, group.amp, group.neutro, minimum.patients) {
+  if(isTRUE(nrow(group.del) < minimum.patients)) {
+
+    return(group.amp)
+
+  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
+
+    return(group.del)
+
+  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
+
+    return(group.amp)
+
+  }
+}
+
+# This function returns if analysis will continue by group.y <- group.neutro or group.y <- group.del
+.setGroupY <- function(group.del, group.amp, group.neutro, minimum.patients) {
+  if(isTRUE(nrow(group.del) < minimum.patients)) {
+
+    return(group.neutro)
+
+  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
+
+    return(group.neutro)
+
+  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
+
+    return(group.del)
+
+  }
+}
+
+# This function evaluates if this is a AMP vs Diploid or DEL vs Diploi case.
+.setCond <- function(group.del, group.amp, group.neutro, minimum.patients) {
+  if(isTRUE(nrow(group.del) < minimum.patients)) {
+
+    return(c("Group AMP vs Group DIPLOID"))
+
+  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
+
+    return(c("Group DEL vs Group DIPLOID"))
+
+  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
+
+    return(c("Group AMP vs Group DEL"))
+
+  }
+}
+
+# This function returns the gene del/amplified % of in patients
+.setSizePat <- function(group.del, group.amp, group.neutro, minimum.patients, del.patients, amp.patients) {
+  if(isTRUE(nrow(group.del) < minimum.patients)) {
+
+    return(amp.patients)
+
+  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
+
+    return(del.patients)
+
+  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
+
+    return(amp.patients + del.patients)
+
+  }
+}
+
+# This function sets the samples IDs to be returned for those who want to consult exactly which barcode is del/amp
+.setPatIDs <- function() {
+  if(isTRUE(nrow(group.del) < minimum.patients)) {
+
+    return(paste(rownames(group.amp), collapse = ","))
+
+  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
+
+    return(paste(rownames(group.del), collapse = ","))
+
+  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
+
+    return(paste(c(rownames(group.amp), rownames(group.del)), collapse = ","))
+
+  }
+}
+
+# This function compares if the genes is differentially expressed when SCN-altered in tumors.
+.getDataDEGs_SCNA <- function(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
+  samplesNT <- rownames(group.y)
+  samplesTP <- rownames(group.x)
+  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[,samplesNT],
+                                            mat2 = dataFilt[,samplesTP],
+                                            metadata = FALSE,
+                                            Cond1type = "Diploid",
+                                            Cond2type = "SCN-altered",
+                                            fdr.cut = filt.FDR.DEA,
+                                            logFC.cut = filt.FC,
+                                            method = "exactTest")
+
+  dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
+  return(dataDEGs)
+
+}
+
+#This function configures the new line for significant DEGs in SCN-altered samples
+.newSCNAline <- function(dataDEGs.SCNA, cond, SCNA.prop.pat, pat.ids) {
+  returns(c(rownames(dataDEGs.SCNA), dataDEGs.SCNA[1,2], dataDEGs.SCNA[1,3], dataDEGs.SCNA[1,4], dataDEGs.SCNA[1,5], cond, SCNA.prop.pat, pat.ids))
+}
+
+# This function converts the SCNA DE resulting matrix into df
+.convertToDF <- function(SCNA.DEG.result) {
+  SCNA.DEG.result <- as.data.frame(SCNA.DEG.result)
+  SCNA.DEG.result$log2FC.SCNAvsDip <- as.numeric(as.character(SCNA.DEG.result$log2FC.SCNAvsDip))
+  SCNA.DEG.result$logCPM.SCNAvsDip <- as.numeric(as.character(SCNA.DEG.result$logCPM.SCNAvsDip))
+  SCNA.DEG.result$p.val.SCNAvsDip <- as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip))
+  SCNA.DEG.result$FDR.SCNAvsDip <- p.adjust(as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip)), method = "fdr")
+  SCNA.DEG.result$Pat.percentage <- as.numeric(as.character(SCNA.DEG.result$Pat.percentage))
+}
 

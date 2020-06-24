@@ -94,18 +94,23 @@ CNAintEXP <- function(genes = c(),
     }
 
     dataDEGs <- NULL
-    if(is.null(exp.mat)) {
-      # If the user does not provide an expression matrix as indicated...
-      if(tumor %in% tumors.with.normal) {
-        tumor.exp <- .downloadExpression(tumor)
-        dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
-                                      filt.method, filt.qnt.cut, filt.var.func,
-                                      filt.var.cutoff, filt.eta, filt.FC)
+    if(is.null(exp.mat) & tumor %in% tumors.with.normal) {
+    # If the user does not provide an expression matrix as indicated...
+      tumor.exp <- .downloadExpression(tumor)
+      dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
+                                    filt.method, filt.qnt.cut, filt.var.func,
+                                    filt.var.cutoff, filt.eta, filt.FC)
 
-        dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
 
-        write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
-      }
+      dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
+      write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
+
+    }else if(is.null(exp.mat) & tumor != tumors.with.normal){
+      tumor.exp <- .downloadExpression(tumor)
+      dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
+                                    filt.method, filt.qnt.cut, filt.var.func,
+                                    filt.var.cutoff, filt.eta, filt.FC)
+
     }else{
       # If the user provides an expression matrix as indicated...
       dataFilt <- exp.mat
@@ -113,13 +118,110 @@ CNAintEXP <- function(genes = c(),
 
     if(is.null(cna.mat)) {
       # If the user does not provide a SCNA matrix as indicated...
-      .getSCNAmatrix(tumor)
+      gistic <- .getSCNAmatrix(tumor)
 
     }else if(!is.null(cna.mat)) {
       # If the user provides a SCNA matrix as indicated...
       gistic <- as.data.frame(cna.mat)
 
     }
+
+    dataFilt <- dataFilt[intersect(rownames(dataFilt), rownames(gistic)), intersect(colnames(dataFilt), colnames(gistic))]
+    gistic <- gistic[intersect(rownames(dataFilt), rownames(gistic)), intersect(colnames(dataFilt), colnames(gistic))]
+
+    exp <- as.data.frame(t(dataFilt[order(rownames(dataFilt)), ]))
+    cna <- as.data.frame(t(gistic[order(rownames(gistic)), ]))
+
+    exp <- exp[order(rownames(exp)), ]
+    cna <- cna[order(rownames(cna)), ]
+
+    save(exp, file = paste(tumor, "_exp_matrix.rda", sep=""))
+    save(cna, file = paste(tumor, "_cna_matrix.rda", sep=""))
+
+    SCNA.DEG.result <- .setRowMatrix(c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "Condition", "Pat.percentage", "Pat.IDs"))
+
+    for(j in 1:ncol(exp)) {
+      gene <- colnames(exp)[j]
+      new <- as.data.frame(.setRowMatrix(c(paste(gene, "_exp", sep=""), paste(gene, "_cna", sep="")))
+      rownames(new) <- rownames(exp)
+      new[,1] <- as.numeric(as.character(exp[,gene]))
+      new[,2] <- as.numeric(as.character(cna[,gene]))
+
+      group.del <- .selectDel(new, cna.thr)
+      group.amo <- .selectAmp(new, cna.thr)
+      group.del <- .selectDiploid(new, cna.thr)
+
+      print(gene)
+      print(paste("Deleted in ", nrow(group.del), " samples", sep=""))
+      print(paste("Amplified in ", nrow(group.amp), " samples", sep=""))
+      print(paste("Diploid in ", nrow(group.neutro), " samples", sep=""))
+      print("------------------------")
+
+      minimum.patients <- .setMinPat(new, pat.percentage)
+
+      del.patients <- (nrow(group.del)/nrow(new)) * 100
+      amp.patients <- (nrow(group.amp)/nrow(new)) * 100
+      neutro.patients <- (nrow(group.neutro)/nrow(new)) * 100
+
+      dataDEGs.SCNA <- NULL
+
+      if(isTRUE(nrow(group.del) < minimum.patients & nrow(group.amp) < minimum.patients)) {
+
+        next
+
+      }else if(isTRUE(nrow(group.del) < minimum.patients) | isTRUE(nrow(group.neutro) < minimum.patients) | isTRUE(nrow(group.amp) < minimum.patients){
+
+        group.x <- .setGroupX(group.del, group.amp, group.neutro, minimum.patients)
+        group.y <- .setGroupY(group.del, group.amp, group.neutro, minimum.patients)
+
+        cond <- .setCond(group.del, group.amp, group.neutro, minimum.patients)
+
+        SCNA.prop.pat <- .setSizePat(group.del, group.amp, group.neutro, minimum.patients)
+
+        pat.ids <- .setPatIDs(group.del, group.amp, group.neutro, minimum.patients, del.patients, amp.patients)
+
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+
+      }else if(isTRUE(nrow(group.del) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
+
+        group.x <- group.del
+        group.y <- group.neutro
+
+        cond <- c("Group DEL vs Group DIPLOID")
+
+        SCNA.prop.pat <- del.patients
+
+        pat.ids <- paste(rownames(group.del), collapse = ",")
+
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+
+
+      }else if(isTRUE(nrow(group.amp) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
+
+        group.x <- group.amp
+        group.y <- group.neutro
+
+        cond <- c("Group DEL vs Group DIPLOID")
+
+        SCNA.prop.pat <- amp.patients
+
+        pat.ids <- paste(rownames(group.amp), collapse = ",")
+
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+
+      }
+
+      if(!is.null(dataDEGs.SCNA)) {
+
+        line <- .newSCNAline(dataDEGs.SCNA, cond, SCNA.prop.pat, pat.ids)
+        SCNA.DEG.result <- rbind(SCNA.DEG.result, line)
+
+      }
+
+    }
+
+    SCNA.DEG.result <- .convertToDF(SCNA.DEG.result)
+
 
 
   }
