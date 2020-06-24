@@ -19,12 +19,6 @@
   return(result)
 }
 
-
-.log2 <- function(df){
-  result <- log2(df + 1)
-  return(result)
-}
-
 .downloadExpression <- function(tumor){
   cohort <- paste("TCGA-", tumor, sep="")
   query <- TCGAbiolinks::GDCquery(project = cohort,
