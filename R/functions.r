@@ -126,6 +126,7 @@
                                             Cond2type = "Tumor",
                                             fdr.cut = filt.FDR.DEA,
                                             logFC.cut = filt.FC,
+                                            method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
   return(dataDEGs)
