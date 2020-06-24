@@ -94,10 +94,6 @@ CNAintEXP <- function(genes = c(),
     }
 
     dataDEGs <- NULL
-
-    dataFilt <- exp.mat
-
-    if(is.null(dataFilt)) {
       if(tumor %in% tumors.with.normal) {
         tumor.exp <- .downloadExpression(tumor)
         dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
