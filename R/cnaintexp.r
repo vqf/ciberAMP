@@ -92,10 +92,6 @@ CNAintEXP <- function(genes = c(),
       print(paste("The introduced cohort: ", tumor, " was not found among the available TCGA cohorts. Bad-spelling is a common mistake, please check it or select any of the available ones.", sep=""))
       next
     }
-    final.col.names <- c("SYMBOL", "P.VAL", "CNA.FC", "PATIENTS.PERCENTAGE","COND", "TEST", "TUMOR", "PAT.ID")
-    final.t.test <- .setRowMatrix(final.col.names)
-    final.w.test <- .setRowMatrix(final.col.names)
-    final.u.test <- .setRowMatrix(final.col.names)
 
     dataDEGs <- NULL
 
