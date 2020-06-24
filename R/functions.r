@@ -32,6 +32,7 @@
                                   experimental.strategy = "RNA-Seq",
                                   sample.type = c("Primary Tumor", "Solid Tissue Normal"))
   TCGAbiolinks::GDCdownload(query)
+
   tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
   return(tumor.exp)
 }
@@ -83,7 +84,7 @@
 .getDataDEGs.scnavsdip <- function(dataFilt, FDR.DEA, FC, pat.dip, pat.scna){
 
 
-  
+
   dataDEGs.scnavsdip <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[gene, intersect(colnames(dataFilt), pat.dip), drop = FALSE],
                                             mat2 = dataFilt[gene, intersect(colnames(dataFilt), pat.scna), drop = FALSE],
                                             metadata = FALSE,
