@@ -105,7 +105,6 @@ CNAintEXP <- function(genes = c(),
         dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
 
         write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
-        #Finalmente, convertimos la matriz de counts en logaritmica (base 2) y cambiamos el nombre de las muestras por el codigo acortado del TCGA. Es necesario porque luego la matriz de numero de copia tendra este codigo en lugar del largo.
 
         dataFilt <- .log2(dataFilt)
         colnames(dataFilt) <- substr(colnames(dataFilt), start = 1, stop = 12)
