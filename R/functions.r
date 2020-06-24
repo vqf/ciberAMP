@@ -19,6 +19,72 @@
   return(result)
 }
 
+# This function downloads tumor expression from GDC and includes it in a SummarizedExperiment object knwon as "tumor.exp"
+.downloadExpression <- function(tumor) {
+  if(tumor %in% tumors.with.normal) {
+    # If the required cohort has normal samples, then we have to indicate it in the TCGAbiolinks::GDCquery function argument "sample.type".
+    cohort <- paste("TCGA-", tumor, sep="")
+    query <- TCGAbiolinks::GDCquery(project = cohort,
+                                    legacy = TRUE,
+                                    data.category = "Gene expression",
+                                    data.type = "Gene expression quantification",
+                                    platform = "Illumina HiSeq",
+                                    file.type = "results",
+                                    experimental.strategy = "RNA-Seq",
+                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
+    TCGAbiolinks::GDCdownload(query)
+
+    tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
+    return(tumor.exp)
+  }else if(tumor == c("SKCM") {
+    # If tumor is SKCM cohort, then "sample.type" argument should be specified for only primary tumors --> in this cohort there are many metastatic samples which are going to be analyzed  <-- SHOULD WE GIVE THE PEOPLE OPTION TO exCLUDE THEM???
+    cohort <- paste("TCGA-", tumor, sep="")
+    query <- TCGAbiolinks::GDCquery(project = cohort,
+                                    legacy = TRUE,
+                                    data.category = "Gene expression",
+                                    data.type = "Gene expression quantification",
+                                    platform = "Illumina HiSeq",
+                                    file.type = "results",
+                                    experimental.strategy = "RNA-Seq",
+                                    sample.type = c("Primary solid Tumor", "Metastatic"))
+    TCGAbiolinks::GDCdownload(query)
+
+    tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
+    return(tumor.exp)
+
+  }else if(tumor == c("LAML")) {
+    # If tumor is SKCM cohort, then "sample.type" argument should be specified since this is a blood type malignancy.
+    cohort <- paste("TCGA-", tumor, sep="")
+    query <- TCGAbiolinks::GDCquery(project = cohort,
+                                    legacy = TRUE,
+                                    data.category = "Gene expression",
+                                    data.type = "Gene expression quantification",
+                                    platform = "Illumina HiSeq",
+                                    file.type = "results",
+                                    experimental.strategy = "RNA-Seq",
+                                    sample.type = c("Primary Blood Derived Cancer - Peripheral Blood"))
+    TCGAbiolinks::GDCdownload(query)
+
+    tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
+    return(tumor.exp)
+
+  }else if(tumor %in% tumors) {
+    # In any other case, if the user's "cohorts" input is valid (exists in TCGA), then this will be a non-normal sample cohort and this is specified in "sample.type" argument as well.
+    cohort <- paste("TCGA-", tumor, sep="")
+    query <- TCGAbiolinks::GDCquery(project = cohort,
+                                    legacy = TRUE,
+                                    data.category = "Gene expression",
+                                    data.type = "Gene expression quantification",
+                                    platform = "Illumina HiSeq",
+                                    file.type = "results",
+                                    experimental.strategy = "RNA-Seq",
+                                    sample.type = c("Primary solid Tumor"))
+    TCGAbiolinks::GDCdownload(query)
+
+    tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
+    return(tumor.exp)
+
+  }
 }
 
 .filterExpression <- function(tumor, sign, object, cor.cut, norm.method, filt.method,
