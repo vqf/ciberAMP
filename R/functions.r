@@ -91,7 +91,6 @@
 .filterExpression <- function(tumor, sign, object, cor.cut, norm.method, filt.method,
                               filt.qnt.cut, filt.var.func, filt.var.cutoff, filt.eta,
                               filt.FC){
-  #The count matrix is filtered out of outliers using AAIC and setting a threshold for correlation minimum.
 
   dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = tumor.exp, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
 
