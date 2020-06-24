@@ -111,7 +111,13 @@ CNAintEXP <- function(genes = c(),
       dataFilt <- exp.mat
     }
 
+    if(is.null(cna.mat)) {
+      # If the user does not provide a SCNA matrix as indicated...
+      .getSCNAmatrix(tumor)
 
+    }else if(!is.null(cna.mat)) {
+      # If the user provides a SCNA matrix as indicated...
+      gistic <- as.data.frame(cna.mat)
 
       }
     }
