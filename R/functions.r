@@ -11,6 +11,7 @@
   return(result)
 }
 
+# This function creates matrices with 0 rows and the specified number (l) of columns
 .setRowMatrix <- function(l){
   ncols <- length(l);
   result <- matrix(ncol = ncols, nrow = 0)
