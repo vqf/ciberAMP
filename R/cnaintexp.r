@@ -119,7 +119,6 @@ CNAintEXP <- function(genes = c(),
       # If the user provides a SCNA matrix as indicated...
       gistic <- as.data.frame(cna.mat)
 
-      }
     }
 
   }
