@@ -132,7 +132,6 @@
   return(dataDEGs)
 }
 
-.getDataDEGs.scnavsdip <- function(dataFilt, FDR.DEA, FC, pat.dip, pat.scna){
 # This function downloads or prepares somatic copy number alteration data matrices for further steps.
 
 
