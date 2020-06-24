@@ -73,6 +73,7 @@ CNAintEXP <- function(genes = c(),
 
   setwd(writePath)
 
+  tumors <- .tumors_all()
   tumors.with.normal <- .tumors_N()
 
   int.df.final <- .setRowMatrix(c("SYMBOL", "P.VAL", "CNA.FC", "PATIENTS.PERCENTAGE", "COND", "TEST", "TUMOR", "PAT.ID", "P.ADJ"))
