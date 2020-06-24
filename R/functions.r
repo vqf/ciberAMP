@@ -5,6 +5,7 @@
   return(result)
 }
 
+# This function creates a complete list of TCGA cohorts with normal samples as control
 .tumors_N <- function(){
   result <- c("KIRC", "LUSC", "LUAD","BRCA", "PRAD", "THCA", "COAD", "KIRP", "STAD", "LIHC", "HNSC", "ESCA", "KICH", "UCEC", "BLCA", "PAAD", "SARC", "READ", "CHOL", "THYM", "CESC", "GBM")
   return(result)
