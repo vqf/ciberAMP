@@ -121,6 +121,7 @@ CNAintEXP <- function(genes = c(),
 
     }
 
+
   }
   #results <- list(as.data.frame(res1), as.data.frame(int.matrix.t), as.data.frame(res2), as.data.frame(int.matrix.t.n))
   #return(results)
