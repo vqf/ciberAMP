@@ -133,6 +133,15 @@
 }
 
 # This function downloads or prepares somatic copy number alteration data matrices for further steps.
+.getSCNAmatrix <- function(tumor) {
+  # If user does not provide a suitable cna.matrix, then we use GDC to download thresholded resulting one for the under analysis tumor.
+  gistic <- getGistic(tumor, type = "thresholded")
+  rownames(gistic) <- gistic[,1]
+  gistic <- gistic[,4:ncol(gistic)]
+  colnames(gistic) <- substr(colnames(gistic), start = 1, stop = 12)
+  return(gistic)
+
+}
 
 
 
