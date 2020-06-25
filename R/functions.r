@@ -131,6 +131,8 @@
                                             method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
+  dataDEGs$Gene_Symbol <- rownames(dataDEGs)
+  dataDEGs <- dataDEGs[,c("Gene_Symbol", "logFC", "logCPM", "PValue", "FDR", "Tumor")]
   return(dataDEGs)
 }
 
