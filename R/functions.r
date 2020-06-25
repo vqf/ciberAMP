@@ -234,5 +234,8 @@
   SCNA.DEG.result$p.val.SCNAvsDip <- as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip))
   SCNA.DEG.result$FDR.SCNAvsDip <- p.adjust(as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip)), method = "fdr")
   SCNA.DEG.result$Pat.percentage <- as.numeric(as.character(SCNA.DEG.result$Pat.percentage))
+  return(SCNA.DEG.result)
+}
+
 }
 
