@@ -406,5 +406,35 @@
   }
 }
 
+# This function returns for each copy number altered gene all those cosmic ones highly correlating: 1) CN-altered samples overlap > 70% and 2) DE correlation
+.getOverlapCOSMIC <- function(SCNA.DEG.result, genes, cosmic.genes) {
+  int.matrix <- .setRowMatrix(0, colnames(SCNA.DEG.result))
+  input <- SCNA.DEG.result[SCNA.DEG.result$Gene_Symbol %in% genes & SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]
+  cosmic <- SCNA.DEG.result[SCNA.DEG.result$Gene_Symbol %in% cosmic.genes & SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]
+  colnames(cosmic) <- paste(colnames(cosmic), "COSMIC", sep="_")
+
+  if(nrow(input) > 0 & nrow(cosmic) > 0) {
+    for(j in 1:nrow(input)) {
+      for(k in 1:nrow(cosmic)) {
+        if(input$TCGA_Tumor[j] == cosmic$TCGA_Tumor[k] & as.character(input$Condition[j]) == as.character(cosmic$Condition[k])) {
+          a <- unlist(strsplit(as.character(input$Pat.IDs[j]), ","))
+          b <- unlist(strsplit(as.character(cosmic$Pat.IDs[k]), ","))
+          int <- intersect(a, b)
+          a.l <- length(a)
+          b.l <- length(b)
+          int.l <- length(int)
+          prop.gene.cosmic <- (int.l/a.l) * 100
+          prop.cosmic.gene <- (int.l/b.l) * 100
+          if(prop.gene.cosmic >= 70) {
+            line <- cbind(as.vector(input[j,]), cosmic[k, ])
+            line$PROP_GENE_COSMIC <- prop.gene.cosmic
+            line$PROP_COSMIC_GENE <- prop.cosmic.gene
+            int.matrix <- rbind(int.matrix, line)
+          }
+        }
+      }
+    }
+  }
+  return(int.matrix)
 }
 
