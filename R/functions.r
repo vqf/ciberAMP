@@ -30,7 +30,6 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
                                     sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
