@@ -211,7 +211,13 @@
                                             method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
-  return(dataDEGs)
+
+  if(gene %in% rownames(dataDEGs)) {
+    dataDEGs <- dataDEGs[gene, ]
+    return(dataDEGs)
+  }else{
+    return(NULL)
+  }
 
 }
 
