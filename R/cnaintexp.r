@@ -84,6 +84,8 @@ CNAintEXP <- function(genes = c(),
   EXPintCNA.results <- NULL
   COSMIC.ov.result <- NULL
 
+  for(i in 1:length(cohorts)) {
+    tumor <- cohorts[i]
     if(tumor %in% tumors) {
       print(paste("Analyzing ", tumor, "...", sep=""))
     }else{
