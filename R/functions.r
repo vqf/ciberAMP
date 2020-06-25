@@ -42,7 +42,7 @@
                               filt.FC){
   #The count matrix is filtered out of outliers using AAIC and setting a threshold for correlation minimum.
 
-  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = tumor.exp, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
+  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = object, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
 
   dataNorm <- TCGAbiolinks::TCGAanalyze_Normalization(tabDF = dataPrep,
                                                       geneInfo = TCGAbiolinks::geneInfo,
@@ -61,7 +61,7 @@
   return(dataFilt)
 }
 
-.getDataDEGs <- function(dataFilt, FDR.DEA, FC){
+.getDataDEGs <- function(dataFilt, FDR.DEA, FC, dea.method){
 
 
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
@@ -73,8 +73,8 @@
                                             metadata = FALSE,
                                             Cond1type = "Normal",
                                             Cond2type = "Tumor",
-                                            fdr.cut = filt.FDR.DEA,
-                                            logFC.cut = filt.FC,
+                                            fdr.cut = FDR.DEA,
+                                            logFC.cut = FC,
                                             method = dea.method)
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))

@@ -105,10 +105,11 @@ CNAintEXP <- function(genes = c(),
     if(is.null(dataFilt)) {
       if(tumor %in% tumors.with.normal) {
         tumor.exp <- .downloadExpression(tumor)
+
         dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
                                       filt.method, filt.qnt.cut, filt.var.func,
                                       filt.var.cutoff, filt.eta, filt.FC)
-        dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
+        dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC, dea.method)
 
 
         write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
