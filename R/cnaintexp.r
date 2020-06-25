@@ -80,7 +80,6 @@ CNAintEXP <- function(genes = c(),
     cohorts <- tumors
   }
 
-  for(tumor in cohorts) {
   EXPintCNA.results <- NULL
   COSMIC.ov.result <- NULL
 
