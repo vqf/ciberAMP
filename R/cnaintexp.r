@@ -140,7 +140,7 @@ CNAintEXP <- function(genes = c(),
     save(exp, file = paste(tumor, "_exp_matrix.rda", sep=""))
     save(cna, file = paste(tumor, "_cna_matrix.rda", sep=""))
 
-    SCNA.DEG.result <- .setRowMatrix(c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "Condition", "Pat.percentage", "Pat.IDs"))
+    SCNA.DEG.result <- .setRowMatrix(0, c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "TCGA_Tumor", "Condition", "Pat.percentage", "Pat.IDs"))
 
     for(j in 1:ncol(exp)) {
       gene <- colnames(exp)[j]
