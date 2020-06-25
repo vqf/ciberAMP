@@ -144,7 +144,7 @@ CNAintEXP <- function(genes = c(),
 
     for(j in 1:ncol(exp)) {
       gene <- colnames(exp)[j]
-      new <- as.data.frame(.setRowMatrix(c(paste(gene, "_exp", sep=""), paste(gene, "_cna", sep="")))
+      new <- as.data.frame(.setRowMatrix(nrow(exp), c(paste(gene, "_exp", sep=""), paste(gene, "_cna", sep=""))))
       rownames(new) <- rownames(exp)
       new[,1] <- as.numeric(as.character(exp[,gene]))
       new[,2] <- as.numeric(as.character(cna[,gene]))
