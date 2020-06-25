@@ -76,11 +76,6 @@ CNAintEXP <- function(genes = c(),
   tumors <- .tumors_all()
   tumors.with.normal <- .tumors_N()
 
-  int.df.final <- .setRowMatrix(c("SYMBOL", "P.VAL", "CNA.FC", "PATIENTS.PERCENTAGE", "COND", "TEST", "TUMOR", "PAT.ID", "P.ADJ"))
-  exp.int.df.final <- .setRowMatrix(c("SYMBOL", "logFC.TvsN", "logCPM.TvsN", "PValue.TvsN", "FDR.TvsN", "Tumor", "P.VAL.CNAvsDip", "CNA.FC", "PATIENTS.PERCENTAGE.CNA", "COND", "TEST", "TUMOR", "PAT.ID", "P.ADJ"))
-  int.matrix.t.n <- .setRowMatrix(c("SYMBOL", "logFC.TvsN", "logCPM.TvsN", "PValue.TvsN", "FDR.TvsN", "Tumor", "P.VAL.CNAvsDip", "CNA.FC", "PATIENTS.PERCENTAGE.CNA", "COND", "TEST", "TUMOR", "PAT.ID", "P.ADJ", "SYMBOL.COSMIC", "logFC.TvsN.COSMIC", "logCPM.TvsN.COSMIC", "PValue.TvsN.COSMIC", "FDR.TvsN.COSMIC", "Tumor.COSMIC", "P.VAL.CNAvsDip.COSMIC", "CNA.FC.COSMIC", "PATIENTS.PERCENTAGE.CNA.COSMIC", "COND.COSMIC", "TEST.COSMIC", "TUMOR.COSMIC", "PAT.ID.COSMIC", "P.ADJ.COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE"))
-  int.matrix.t <- .setRowMatrix(c("SYMBOL", "P.VAL", "CNA.FC", "PATIENTS.PERCENTAGE", "COND", "TEST", "TUMOR", "PAT.ID", "P.ADJ", "SYMBOL.COSMIC", "P.VAL.COSMIC", "CNA.FC.COSMIC", "PATIENTS.PERCENTAGE", "COND.COSMIC", "TEST.COSMIC", "TUMOR.COSMIC", "PAT.ID", "P.ADJ.COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE"))
-
   if(length(cohorts) == 0 || "ALL" %in% cohorts) {
     cohorts <- tumors
   }
