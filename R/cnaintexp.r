@@ -189,7 +189,7 @@ CNAintEXP <- function(genes = c(),
         group.x <- group.amp
         group.y <- group.neutro
 
-        cond <- c("Group DEL vs Group DIPLOID")
+        cond <- c("Group AMP vs Group DIPLOID")
 
         SCNA.prop.pat <- amp.patients
 
