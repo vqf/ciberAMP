@@ -171,19 +171,6 @@ CNAintEXP <- function(genes = c(),
 
         next
 
-      }else if(isTRUE(nrow(group.del) < minimum.patients) | isTRUE(nrow(group.neutro) < minimum.patients) | isTRUE(nrow(group.amp) < minimum.patients){
-
-        group.x <- .setGroupX(group.del, group.amp, group.neutro, minimum.patients)
-        group.y <- .setGroupY(group.del, group.amp, group.neutro, minimum.patients)
-
-        cond <- .setCond(group.del, group.amp, group.neutro, minimum.patients)
-
-        SCNA.prop.pat <- .setSizePat(group.del, group.amp, group.neutro, minimum.patients)
-
-        pat.ids <- .setPatIDs(group.del, group.amp, group.neutro, minimum.patients, del.patients, amp.patients)
-
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
-
       }else if(isTRUE(nrow(group.del) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
 
         group.x <- group.del
@@ -196,7 +183,6 @@ CNAintEXP <- function(genes = c(),
         pat.ids <- paste(rownames(group.del), collapse = ",")
 
         dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
-
 
       }else if(isTRUE(nrow(group.amp) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
 
