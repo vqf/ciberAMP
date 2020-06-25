@@ -193,6 +193,7 @@
   if(min >= 3) {
     return(min)
   }else if(min < 3){
+    return(3)
   }
 }
 
