@@ -94,7 +94,7 @@ CNAintEXP <- function(genes = c(),
     }
 
     dataDEGs <- NULL
-    if(is.null(exp.mat) & tumor %in% tumors.with.normal) {
+    if(is.null(exp.mat) && tumor %in% tumors.with.normal) {
     # If the user does not provide an expression matrix as indicated...
       tumor.exp <- .downloadExpression(tumor)
       dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
