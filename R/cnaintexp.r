@@ -226,8 +226,6 @@ CNAintEXP <- function(genes = c(),
       COSMIC.ov.result <- rbind(COSMIC.ov.result, COSMIC.overlap)
     }
   }
-  #results <- list(as.data.frame(res1), as.data.frame(int.matrix.t), as.data.frame(res2), as.data.frame(int.matrix.t.n))
-  #return(results)
 
   write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", header=TRUE)
   write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", header=TRUE)
