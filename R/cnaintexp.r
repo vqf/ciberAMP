@@ -142,7 +142,7 @@ CNAintEXP <- function(genes = c(),
 
     for(j in 1:ncol(exp)) {
       gene <- colnames(exp)[j]
-      new <- as.data.frame(.setRowMatrix(c(paste(gene, "_exp", sep=""), paste(gene, "_cna", sep="")))
+      new <- as.data.frame(.setRowMatrix(c(paste(gene, "_exp", sep=""), paste(gene, "_cna", sep=""))))
       rownames(new) <- rownames(exp)
       new[,1] <- as.numeric(as.character(exp[,gene]))
       new[,2] <- as.numeric(as.character(cna[,gene]))
@@ -169,7 +169,11 @@ CNAintEXP <- function(genes = c(),
 
         next
 
-      }else if(isTRUE(nrow(group.del) < minimum.patients) | isTRUE(nrow(group.neutro) < minimum.patients) | isTRUE(nrow(group.amp) < minimum.patients){
+      }else if (
+        isTRUE(nrow(group.del) < minimum.patients) ||
+        isTRUE(nrow(group.neutro) < minimum.patients) ||
+        isTRUE(nrow(group.amp) < minimum.patients)
+        ){
 
         group.x <- .setGroupX(group.del, group.amp, group.neutro, minimum.patients)
         group.y <- .setGroupY(group.del, group.amp, group.neutro, minimum.patients)
