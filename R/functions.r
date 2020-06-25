@@ -201,7 +201,7 @@
 .getDataDEGs_SCNA <- function(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
   samplesNT <- rownames(group.y)
   samplesTP <- rownames(group.x)
-  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[,samplesNT],
+  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, samplesNT],
                                             mat2 = dataFilt[,samplesTP],
                                             metadata = FALSE,
                                             Cond1type = "Diploid",
