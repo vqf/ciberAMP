@@ -237,5 +237,174 @@
   return(SCNA.DEG.result)
 }
 
+# This function combines dataDEGs and SCNA.DEG.result: 1) evaluated if dataDEGs is null or not and 2) creates a new integrated matrix with both data (if dataDEGs is null -> NAs introduced)
+.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage) {
+  if(!is.null(dataDEGs) && nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) > 0) {
+    s <-  merge(dataDEGs[dataDEGs$Gene_Symbol %in% genes & dataDEGs$Gene_Symbol %in% cosmic.genes, ], SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
+    s$Condition <- as.character(s$Condition)
+    s$Pat.IDs <- as.character(s$Pat.IDs)
+    s$Tumor <- as.character(s$Tumor)
+    s$TCGA_Tumor <- as.character(s$TCGA_Tumor)
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logFC[i])) {
+        s$logFC[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM[i])) {
+        s$logCPM[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$PValue[i])) {
+        s$PValue[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR[i])) {
+        s$FDR[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Tumor[i])) {
+        s$Tumor[i] <- as.character(s$TCGA_Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$log2FC.SCNAvsDip[i])) {
+        s$log2FC.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM.SCNAvsDip[i])) {
+        s$logCPM.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$p.val.SCNAvsDip[i])) {
+        s$p.val.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR.SCNAvsDip[i])) {
+        s$FDR.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$TCGA_Tumor[i])) {
+        s$TCGA_Tumor[i] <- as.character(s$Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Condition[i])) {
+        s$Condition[i] <- paste("Not SCN-altered in more than", pat.percentage, "% of the samples", sep=" ")
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Pat.percentage[i])) {
+        s$Pat.percentage[i] <- 0
+      }
+    }
+
+    return(s)
+
+  }else if(is.null(dataDEGs)) {
+
+    d <- as.data.frame(.setRowMatrix(nrow(SCNA.DEG.result), c("Gene_Symbol", "logFC", "logCPM", "PValue", "FDR", "Tumor")))
+    d$Gene_Symbol <- SCNA.DEG.result$Gene_Symbol
+    s <-  merge(d, SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
+    s$Condition <- as.character(s$Condition)
+    s$Pat.IDs <- as.character(s$Pat.IDs)
+    s$Tumor <- as.character(s$Tumor)
+    s$TCGA_Tumor <- as.character(s$TCGA_Tumor)
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logFC[i])) {
+        s$logFC[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM[i])) {
+        s$logCPM[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$PValue[i])) {
+        s$PValue[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR[i])) {
+        s$FDR[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Tumor[i])) {
+        s$Tumor[i] <- as.character(s$TCGA_Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$log2FC.SCNAvsDip[i])) {
+        s$log2FC.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM.SCNAvsDip[i])) {
+        s$logCPM.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$p.val.SCNAvsDip[i])) {
+        s$p.val.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR.SCNAvsDip[i])) {
+        s$FDR.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$TCGA_Tumor[i])) {
+        s$TCGA_Tumor[i] <- as.character(s$Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Condition[i])) {
+        s$Condition[i] <- paste("Not SCN-altered in more than", pat.percentage, " ")
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Pat.percentage[i])) {
+        s$Pat.percentage[i] <- 0
+      }
+    }
+
+    return(s)
+  }
+}
+
 }
 
