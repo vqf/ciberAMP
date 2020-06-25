@@ -223,7 +223,7 @@
 
 #This function configures the new line for significant DEGs in SCN-altered samples
 .newSCNAline <- function(dataDEGs.SCNA, cond, SCNA.prop.pat, pat.ids) {
-  returns(c(rownames(dataDEGs.SCNA), dataDEGs.SCNA[1,2], dataDEGs.SCNA[1,3], dataDEGs.SCNA[1,4], dataDEGs.SCNA[1,5], cond, SCNA.prop.pat, pat.ids))
+  return(c(rownames(dataDEGs.SCNA), dataDEGs.SCNA[1,1], dataDEGs.SCNA[1,2], dataDEGs.SCNA[1,3], dataDEGs.SCNA[1,4], dataDEGs.SCNA[1,5], cond, SCNA.prop.pat, pat.ids))
 }
 
 # This function converts the SCNA DE resulting matrix into df
