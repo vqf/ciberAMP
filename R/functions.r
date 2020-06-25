@@ -191,7 +191,7 @@
 .setMinPat <- function(new, pat.percentage) {
   min <- (nrow(new) * pat.percentage)/100
   if(min >= 3) {
-    minimum.patients <- minimum.patients
+    return(min)
   }else if(min < 3){
     minimum.patients <- 3
   }
