@@ -150,8 +150,8 @@ CNAintEXP <- function(genes = c(),
       new[,2] <- as.numeric(as.character(cna[,gene]))
 
       group.del <- .selectDel(new, cna.thr)
-      group.amo <- .selectAmp(new, cna.thr)
-      group.del <- .selectDiploid(new, cna.thr)
+      group.amp <- .selectAmp(new, cna.thr)
+      group.neutro <- .selectDiploid(new, cna.thr)
 
       print(gene)
       print(paste("Deleted in ", nrow(group.del), " samples", sep=""))
