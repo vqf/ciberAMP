@@ -13,7 +13,7 @@
 # This function creates matrices with 0 rows and the specified number (l) of columns
 .setRowMatrix <- function(nrow, l){
   ncols <- length(l);
-  result <- matrix(ncol = ncols, nrow = 0)
+  result <- matrix(ncol = ncols, nrow = nrow)
   colnames(result) <- l
   return(result)
 }
