@@ -62,7 +62,7 @@ CNAintEXP <- function(genes = c(),
                       exp.mat = NULL,
                       cna.mat = NULL) {
 
-  cosmic.genes <- all_genes()
+  cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
   sign <- c(genes, cosmic.genes)
 
