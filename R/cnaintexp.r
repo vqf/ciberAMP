@@ -126,6 +126,8 @@ CNAintEXP <- function(genes = c(),
 
     }
 
+    colnames(dataFilt) <- substr(colnames(dataFilt), 1, 12)
+
     dataFilt <- dataFilt[intersect(rownames(dataFilt), rownames(gistic)), intersect(colnames(dataFilt), colnames(gistic))]
     gistic <- gistic[intersect(rownames(dataFilt), rownames(gistic)), intersect(colnames(dataFilt), colnames(gistic))]
 
