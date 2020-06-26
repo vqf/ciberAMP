@@ -11,7 +11,7 @@
 }
 
 # This function creates matrices with 0 rows and the specified number (l) of columns
-.setRowMatrix <- function(nrow, l){
+.setRowMatrix <- function(l){
   ncols <- length(l);
   result <- matrix(ncol = ncols, nrow = 0)
   colnames(result) <- l
@@ -19,7 +19,7 @@
 }
 
 # This function downloads tumor expression from GDC and includes it in a SummarizedExperiment object knwon as "tumor.exp"
-.downloadExpression <- function(tumor) {
+.downloadExpression <- function(tumor, tumors.with.normal) {
   if(tumor %in% tumors.with.normal) {
     # If the required cohort has normal samples, then we have to indicate it in the TCGAbiolinks::GDCquery function argument "sample.type".
     cohort <- paste("TCGA-", tumor, sep="")
@@ -30,7 +30,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
+                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
