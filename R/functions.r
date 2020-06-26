@@ -9,7 +9,6 @@
   result <- c("KIRC", "LUSC", "LUAD","BRCA", "PRAD", "THCA", "COAD", "KIRP", "STAD", "LIHC", "HNSC", "ESCA", "KICH", "UCEC", "BLCA", "PAAD", "SARC", "READ", "CHOL", "THYM", "CESC", "GBM")
   return(result)
 }
-
 # This function creates matrices with 0 rows and the specified number (l) of columns
 .setRowMatrix <- function(l){
   ncols <- length(l);

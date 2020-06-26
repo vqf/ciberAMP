@@ -7,7 +7,7 @@
 CNAintEXP(
   genes = c(),
   cohorts = c(),
-  writePath = getwd(),
+  writePath = NULL,
   pat.percentage = 10,
   pp.cor.cut = 0.6,
   norm.method = "geneLength",
@@ -18,7 +18,6 @@ CNAintEXP(
   filt.eta = 0.05,
   filt.FDR.DEA = 0.01,
   filt.FC = 1,
-  dea.method = c("exactTest"),
   normality.thr = 0.05,
   var.thr = 0.05,
   p.val.thr = 1,
@@ -57,11 +56,6 @@ Passed to `TCGAanalyze_DEA`.}
 
 \item{filt.FC}{Parameter for `filter2`. Defaults to 1.}
 
-\item{dea.method}{Differential expression analysis method. Either `glmLRT` or `exactTest`.
-`glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
-`exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
-distributed counts.}
-
 \item{normality.thr}{Threshold for normality tests. Defaults to 0.05.}
 
 \item{var.thr}{Threshold for tests of equal variance. Defaults to 0.05.}
@@ -78,13 +72,17 @@ which means that the method considers TCGA expression matrices belonging to `coh
 
 \item{cna.mat}{Custom copy-number analysis matrix, which will not be filtered. Defaults to `NULL`,
 which means that the method considers TCGA copy-number analysis matrices belonging to `cohorts`.}
+
+\item{dea.method}{Differential expression analysis method. Either `glmLRT` or `exactTest`.
+`glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
+`exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
+distributed counts.}
 }
 \value{
-List containing four data frames:
-1 - CNA results for tumors with no normal samples in the database.
-2 - Integrated results between GENES and COSMIC for tumor cohorts.
-3 - CNA results for tumors with normal samples in the database.
-4 - Integrated results between GENES and COSMIC for tumor and normal cohorts. See vignette for details.
+List containing three data frames:
+1 - SCNA-mRNA correlations for queried genes
+2 - SCNA-mRNA correlations for Cancer Census genes (COSMIC) | Known oncodriver/TS genes.
+3 - SCNA overlapping between queried and CGC genes.
 }
 \description{
 Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
