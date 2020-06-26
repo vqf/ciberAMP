@@ -56,11 +56,6 @@ Passed to `TCGAanalyze_DEA`.}
 
 \item{filt.FC}{Parameter for `filter2`. Defaults to 1.}
 
-\item{dea.method}{Differential expression analysis method. Either `glmLRT` or `exactTest`.
-`glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
-`exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
-distributed counts.}
-
 \item{normality.thr}{Threshold for normality tests. Defaults to 0.05.}
 
 \item{var.thr}{Threshold for tests of equal variance. Defaults to 0.05.}
@@ -77,6 +72,11 @@ which means that the method considers TCGA expression matrices belonging to `coh
 
 \item{cna.mat}{Custom copy-number analysis matrix, which will not be filtered. Defaults to `NULL`,
 which means that the method considers TCGA copy-number analysis matrices belonging to `cohorts`.}
+
+\item{dea.method}{Differential expression analysis method. Either `glmLRT` or `exactTest`.
+`glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
+`exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
+distributed counts.}
 }
 \value{
 List containing four data frames:
