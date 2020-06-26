@@ -34,11 +34,10 @@
 #' @param cna.mat Custom copy-number analysis matrix, which will not be filtered. Defaults to `NULL`,
 #' which means that the method considers TCGA copy-number analysis matrices belonging to `cohorts`.
 #'
-#' @return List containing four data frames:
-#' 1 - CNA results for tumors with no normal samples in the database.
-#' 2 - Integrated results between GENES and COSMIC for tumor cohorts.
-#' 3 - CNA results for tumors with normal samples in the database.
-#' 4 - Integrated results between GENES and COSMIC for tumor and normal cohorts. See vignette for details.
+#' @return List containing three data frames:
+#' 1 - SCNA-mRNA correlations for queried genes
+#' 2 - SCNA-mRNA correlations for Cancer Census genes (COSMIC) | Known oncodriver/TS genes.
+#' 3 - SCNA overlapping between queried and CGC genes.
 #' @export
 #'
 #' @examples
