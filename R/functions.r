@@ -174,6 +174,18 @@
   }
 }
 
+selectNeutro <- function(new, cna.thr){
+  group.neutro <- NULL
+  if(cna.thr == "Deep") {
+    group.neutro <- new[new[,2] == 0, ]
+  }else if(cna.thr == "Shallow") {
+    group.neutro <- new[new[,2] == 0, ]
+  }else if(cna.thr == "Both"){
+    group.neutro <- new[new[,2] == 0, ]
+  }
+  return(group.neutro)
+}
+
 .selectDiploid <- function(new, cna.thr) {
   if(cna.thr == "Deep") {
     group.neutro <- new[new[,2] == 0, ]

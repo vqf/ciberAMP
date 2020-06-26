@@ -151,6 +151,7 @@ CNAintEXP <- function(genes = c(),
       group.del <- .selectDel(new, cna.thr)
       group.amp <- .selectAmp(new, cna.thr)
       group.del <- .selectDiploid(new, cna.thr)
+      group.neutro <- .selectNeutro(new, cna.thr)
       # Def of group.neutro?
 
       print(gene)
