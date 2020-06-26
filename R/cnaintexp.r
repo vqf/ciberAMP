@@ -225,9 +225,9 @@ CNAintEXP <- function(genes = c(),
     }
   }
 
-  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", header=TRUE)
-  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", header=TRUE)
-  write.table(COSMIC.ov.result, "CiberAMP COSMIC overlap results.txt", sep="\t", header=TRUE)
+  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", quote=FALSE)
+  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", quote=FALSE)
+  write.table(COSMIC.ov.result, "CiberAMP COSMIC overlap results.txt", sep="\t", quote=FALSE)
 
   end <- list(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], COSMIC.ov.result)
   return(end)
