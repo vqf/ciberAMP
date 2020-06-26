@@ -79,11 +79,10 @@ which means that the method considers TCGA copy-number analysis matrices belongi
 distributed counts.}
 }
 \value{
-List containing four data frames:
-1 - CNA results for tumors with no normal samples in the database.
-2 - Integrated results between GENES and COSMIC for tumor cohorts.
-3 - CNA results for tumors with normal samples in the database.
-4 - Integrated results between GENES and COSMIC for tumor and normal cohorts. See vignette for details.
+List containing three data frames:
+1 - SCNA-mRNA correlations for queried genes
+2 - SCNA-mRNA correlations for Cancer Census genes (COSMIC) | Known oncodriver/TS genes.
+3 - SCNA overlapping between queried and CGC genes.
 }
 \description{
 Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
