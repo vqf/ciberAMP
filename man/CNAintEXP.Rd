@@ -7,7 +7,7 @@
 CNAintEXP(
   genes = c(),
   cohorts = c(),
-  writePath = getwd(),
+  writePath = NULL,
   pat.percentage = 10,
   pp.cor.cut = 0.6,
   norm.method = "geneLength",
