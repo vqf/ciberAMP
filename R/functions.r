@@ -217,7 +217,6 @@
   }else{
     return(NULL)
   }
-
 }
 
 #This function configures the new line for significant DEGs in SCN-altered samples
