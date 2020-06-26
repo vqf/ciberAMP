@@ -55,6 +55,7 @@ CNAintEXP <- function(genes = c(),
                       filt.eta = 0.05,
                       filt.FDR.DEA = 0.01,
                       filt.FC = 1,
+                      dea.method ="exactTest",
                       normality.thr = 0.05,
                       var.thr = 0.05,
                       p.val.thr = 1,
@@ -96,13 +97,13 @@ CNAintEXP <- function(genes = c(),
     dataDEGs <- NULL
     if(is.null(exp.mat) & tumor %in% tumors.with.normal) {
     # If the user does not provide an expression matrix as indicated...
-      tumor.exp <- .downloadExpression(tumor)
+      tumor.exp <- .downloadExpression(tumor, tumors.with.normal)
       dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
                                     filt.method, filt.qnt.cut, filt.var.func,
                                     filt.var.cutoff, filt.eta, filt.FC)
 
 
-      dataDEGs <- .getDataDEGs(dataFilt, filt.FDR.DEA, filt.FC)
+      dataDEGs <- .getDataDEGs(tumor, dataFilt, filt.FDR.DEA, filt.FC, dea.method)
       write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
 
     }else if(is.null(exp.mat) & tumor != tumors.with.normal){
@@ -148,8 +149,10 @@ CNAintEXP <- function(genes = c(),
       new[,2] <- as.numeric(as.character(cna[,gene]))
 
       group.del <- .selectDel(new, cna.thr)
-      group.amo <- .selectAmp(new, cna.thr)
+      group.amp <- .selectAmp(new, cna.thr)
       group.del <- .selectDiploid(new, cna.thr)
+      group.neutro <- .selectNeutro(new, cna.thr)
+      # Def of group.neutro?
 
       print(gene)
       print(paste("Deleted in ", nrow(group.del), " samples", sep=""))
@@ -184,7 +187,7 @@ CNAintEXP <- function(genes = c(),
 
         pat.ids <- .setPatIDs(group.del, group.amp, group.neutro, minimum.patients, del.patients, amp.patients)
 
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
 
       }else if(isTRUE(nrow(group.del) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
 
@@ -197,7 +200,7 @@ CNAintEXP <- function(genes = c(),
 
         pat.ids <- paste(rownames(group.del), collapse = ",")
 
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
 
 
       }else if(isTRUE(nrow(group.amp) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
@@ -211,7 +214,7 @@ CNAintEXP <- function(genes = c(),
 
         pat.ids <- paste(rownames(group.amp), collapse = ",")
 
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
 
       }
 
