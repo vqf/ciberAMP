@@ -10,7 +10,7 @@
   return(result)
 }
 # This function creates matrices with 0 rows and the specified number (l) of columns
-.setRowMatrix <- function(nrow, l){
+.setRowMatrix <- function(l){
   ncols <- length(l);
   result <- matrix(ncol = ncols, nrow = nrow)
   colnames(result) <- l
@@ -29,7 +29,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
+                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -93,7 +93,7 @@
                               filt.qnt.cut, filt.var.func, filt.var.cutoff, filt.eta,
                               filt.FC){
 
-  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = tumor.exp, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
+  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = object, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
 
   dataNorm <- TCGAbiolinks::TCGAanalyze_Normalization(tabDF = dataPrep,
                                                       geneInfo = TCGAbiolinks::geneInfo,
@@ -113,7 +113,7 @@
 }
 
 # This function compares tumor vs normal expression differences and uses "edgeR::exactTest" function to assign significance to those comparisons: finds differentially expressed genes (DEGs)
-.getDataDEGs <- function(dataFilt, FDR.DEA, FC){
+.getDataDEGs <- function(tumor, dataFilt, FDR.DEA, FC, dea.method){
 
 
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
@@ -125,9 +125,9 @@
                                             metadata = FALSE,
                                             Cond1type = "Normal",
                                             Cond2type = "Tumor",
-                                            fdr.cut = filt.FDR.DEA,
-                                            logFC.cut = filt.FC,
-                                            method = "exactTest")
+                                            fdr.cut = FDR.DEA,
+                                            logFC.cut = FC,
+                                            method = dea.method)
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
   dataDEGs$Gene_Symbol <- rownames(dataDEGs)
@@ -138,7 +138,7 @@
 # This function downloads or prepares somatic copy number alteration data matrices for further steps.
 .getSCNAmatrix <- function(tumor) {
   # If user does not provide a suitable cna.matrix, then we use GDC to download thresholded resulting one for the under analysis tumor.
-  gistic <- getGistic(tumor, type = "thresholded")
+  gistic <- TCGAbiolinks::getGistic(tumor, type = "thresholded")
   rownames(gistic) <- gistic[,1]
   gistic <- gistic[,4:ncol(gistic)]
   colnames(gistic) <- substr(colnames(gistic), start = 1, stop = 12)
@@ -173,6 +173,18 @@
   }
 }
 
+.selectNeutro <- function(new, cna.thr){
+  group.neutro <- NULL
+  if(cna.thr == "Deep") {
+    group.neutro <- new[new[,2] == 0, ]
+  }else if(cna.thr == "Shallow") {
+    group.neutro <- new[new[,2] == 0, ]
+  }else if(cna.thr == "Both"){
+    group.neutro <- new[new[,2] == 0, ]
+  }
+  return(group.neutro)
+}
+
 .selectDiploid <- function(new, cna.thr) {
   if(cna.thr == "Deep") {
     group.neutro <- new[new[,2] == 0, ]
@@ -193,11 +205,11 @@
     return(min)
   }else if(min < 3){
     return(3)
-  }
-}
+    }
+   }
 
 # This function compares if the genes is differentially expressed when SCN-altered in tumors.
-.getDataDEGs_SCNA <- function(dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
+.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
   samplesNT <- rownames(group.y)
   samplesTP <- rownames(group.x)
   dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, samplesNT],
