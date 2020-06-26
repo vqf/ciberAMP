@@ -174,7 +174,7 @@
   }
 }
 
-selectNeutro <- function(new, cna.thr){
+.selectNeutro <- function(new, cna.thr){
   group.neutro <- NULL
   if(cna.thr == "Deep") {
     group.neutro <- new[new[,2] == 0, ]
@@ -207,7 +207,7 @@ selectNeutro <- function(new, cna.thr){
   }else if(min < 3){
     minimum.patients <- 3
   }
-  retunr(min)
+  return(min)
 }
 
 # This function returns if analysis will continue by group.x <- group.amp or group.x <- group.del
