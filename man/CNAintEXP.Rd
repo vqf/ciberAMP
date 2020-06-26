@@ -18,7 +18,6 @@ CNAintEXP(
   filt.eta = 0.05,
   filt.FDR.DEA = 0.01,
   filt.FC = 1,
-  dea.method = c("exactTest"),
   normality.thr = 0.05,
   var.thr = 0.05,
   p.val.thr = 1,
