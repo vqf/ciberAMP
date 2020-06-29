@@ -18,7 +18,7 @@
 }
 
 # This function downloads tumor expression from GDC and includes it in a SummarizedExperiment object knwon as "tumor.exp"
-.downloadExpression <- function(tumor, tumors.with.normal) {
+.downloadExpression <- function(tumor, tumors, tumors.with.normal) {
   if(tumor %in% tumors.with.normal) {
     # If the required cohort has normal samples, then we have to indicate it in the TCGAbiolinks::GDCquery function argument "sample.type".
     cohort <- paste("TCGA-", tumor, sep="")
