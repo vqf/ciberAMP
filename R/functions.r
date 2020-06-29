@@ -10,9 +10,9 @@
   return(result)
 }
 # This function creates matrices with 0 rows and the specified number (l) of columns
-.setRowMatrix <- function(l){
+.setRowMatrix <- function(nrow, l){
   ncols <- length(l);
-  result <- matrix(ncol = ncols, nrow = nrow)
+  result <- matrix(nrow = nrow, ncol = ncols)
   colnames(result) <- l
   return(result)
 }
