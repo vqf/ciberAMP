@@ -209,7 +209,7 @@
    }
 
 # This function compares if the genes is differentially expressed when SCN-altered in tumors.
-.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
+.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene) {
   samplesNT <- rownames(group.y)
   samplesTP <- rownames(group.x)
   dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, samplesNT],
@@ -248,7 +248,7 @@
 }
 
 # This function combines dataDEGs and SCNA.DEG.result: 1) evaluated if dataDEGs is null or not and 2) creates a new integrated matrix with both data (if dataDEGs is null -> NAs introduced)
-.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage) {
+.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes) {
   if(!is.null(dataDEGs) && nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) > 0) {
     s <-  merge(dataDEGs[dataDEGs$Gene_Symbol %in% genes & dataDEGs$Gene_Symbol %in% cosmic.genes, ], SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
     s$Condition <- as.character(s$Condition)
