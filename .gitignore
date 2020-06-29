@@ -2,3 +2,4 @@
 /GDCdata/*
 *.gz
 *.png
+.Rproj.user

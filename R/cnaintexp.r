@@ -95,7 +95,7 @@ CNAintEXP <- function(genes = c(),
     dataDEGs <- NULL
     if(is.null(exp.mat) && tumor %in% tumors.with.normal) {
     # If the user does not provide an expression matrix as indicated...
-      tumor.exp <- .downloadExpression(tumor, tumors.with.normal)
+      tumor.exp <- .downloadExpression(tumor, tumors, tumors.with.normal)
       dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
                                     filt.method, filt.qnt.cut, filt.var.func,
                                     filt.var.cutoff, filt.eta, filt.FC)
@@ -105,7 +105,7 @@ CNAintEXP <- function(genes = c(),
       write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
 
     }else if(is.null(exp.mat) && tumor != tumors.with.normal){
-      tumor.exp <- .downloadExpression(tumor, tumors.with.normal)
+      tumor.exp <- .downloadExpression(tumor, tumors, tumors.with.normal)
       dataFilt <- .filterExpression(tumor, sign, tumor.exp, pp.cor.cut, norm.method,
                                     filt.method, filt.qnt.cut, filt.var.func,
                                     filt.var.cutoff, filt.eta, filt.FC)
@@ -139,7 +139,7 @@ CNAintEXP <- function(genes = c(),
     save(exp, file = paste(tumor, "_exp_matrix.rda", sep=""))
     save(cna, file = paste(tumor, "_cna_matrix.rda", sep=""))
 
-    SCNA.DEG.result <- .setRowMatrix(0, c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "TCGA_Tumor", "Condition", "Pat.percentage", "Pat.IDs"))
+    SCNA.DEG.result <- .setRowMatrix(nrow = 0, c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "TCGA_Tumor", "Condition", "Pat.percentage", "Pat.IDs"))
 
     for(j in 1:ncol(exp)) {
       gene <- colnames(exp)[j]
@@ -182,7 +182,7 @@ CNAintEXP <- function(genes = c(),
 
         pat.ids <- paste(rownames(group.del), collapse = ",")
 
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene)
 
       }else if(isTRUE(nrow(group.amp) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
 
@@ -195,7 +195,7 @@ CNAintEXP <- function(genes = c(),
 
         pat.ids <- paste(rownames(group.amp), collapse = ",")
 
-        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC)
+        dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene)
 
       }
 
@@ -212,7 +212,7 @@ CNAintEXP <- function(genes = c(),
 
     COSMIC.overlap <- .getOverlapCOSMIC(SCNA.DEG.result, genes, cosmic.genes)
 
-    merge.dataDEGs <- .mergeDEGs(dataDEGs, SCNA.DEG.result, pat.percentage)
+    merge.dataDEGs <- .mergeDEGs(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes)
 
     if(is.null(EXPintCNA.results)) {
       EXPintCNA.results <- merge.dataDEGs

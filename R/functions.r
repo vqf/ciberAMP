@@ -10,15 +10,15 @@
   return(result)
 }
 # This function creates matrices with 0 rows and the specified number (l) of columns
-.setRowMatrix <- function(l){
+.setRowMatrix <- function(nrow, l){
   ncols <- length(l);
-  result <- matrix(ncol = ncols, nrow = nrow)
+  result <- matrix(nrow = nrow, ncol = ncols)
   colnames(result) <- l
   return(result)
 }
 
 # This function downloads tumor expression from GDC and includes it in a SummarizedExperiment object knwon as "tumor.exp"
-.downloadExpression <- function(tumor, tumors.with.normal) {
+.downloadExpression <- function(tumor, tumors, tumors.with.normal) {
   if(tumor %in% tumors.with.normal) {
     # If the required cohort has normal samples, then we have to indicate it in the TCGAbiolinks::GDCquery function argument "sample.type".
     cohort <- paste("TCGA-", tumor, sep="")
@@ -29,7 +29,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
+                                    sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -209,7 +209,7 @@
    }
 
 # This function compares if the genes is differentially expressed when SCN-altered in tumors.
-.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
+.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene) {
   samplesNT <- rownames(group.y)
   samplesTP <- rownames(group.x)
   dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, samplesNT],
@@ -248,7 +248,7 @@
 }
 
 # This function combines dataDEGs and SCNA.DEG.result: 1) evaluated if dataDEGs is null or not and 2) creates a new integrated matrix with both data (if dataDEGs is null -> NAs introduced)
-.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage) {
+.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes) {
   if(!is.null(dataDEGs) && nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) > 0) {
     s <-  merge(dataDEGs[dataDEGs$Gene_Symbol %in% genes & dataDEGs$Gene_Symbol %in% cosmic.genes, ], SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
     s$Condition <- as.character(s$Condition)
