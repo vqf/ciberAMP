@@ -256,3 +256,22 @@ all_tumors <- function(){
   result <- c(non, nor)
   return(result)
 }
+
+#' Plot CiberAMP results with ggplot
+#'
+#' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
+#' @export
+ggplot.CiberAMP <- function(output){
+  df.exp <- output[[1]]
+  ggplot(df.exp, aes(x = logFC, y = log2FC.SCNAvsDip, color = TCGA_Tumor)) + geom_point(aes(size = Pat.percentage), shape = ifelse(df.exp$Condition %in% "Group AMP vs Group DIPLOID", 17, 16)) + scale_colour_manual(values = c("ACC" = "#ffcccc", "BLCA" = "#ffd9cc", "BRCA" = "#ffe6cc", "CHOL" = "#fff2cc", "COAD" = "#ffffcc", "CESC" = "#f2ffcc", "DLBC" = "#e6ffcc", "ESCA" = "#d9ffcc", "GBM" = "#ccffcc", "HNSC" = "#ccffd9", "KIRC" = "#ccffe6", "KIRP" = "#ccfff2", "KICH" = "#ccffff", "LAML" = "#ccf2ff", "LIHC" = "#cce6ff", "LGG" = "#ccd9ff", "LUAD" = "#ccccff", "LUSC" = "#d9ccff", "MESO" = "#e6ccff", "OV" = "#f2ccff", "PAAD" ="#ffccff", "PCPG" = "#ffccf2", "PRAD" = "#ffcce6", "READ" = "#ffccd9", "SARC" = "#ffcccc", "SKCM" = "#ff6666", "STAD" = "#b366ff",  "TGCT" = "#668cff", "THCA" = "#ff8c66", "THYM" = "#ff0000", "UCEC" = "#848785", "UCS" = "#767676", "UVM" = "#86C0C3")) + scale_size_continuous(range = c(4,20)) + theme_minimal() + xlab("mRNA diff. exp. tumor vs normal samples (log2(FC))") + ylab("mRNA diff. exp. SCN-altered vs diploid tumor samples (log2(FC))")
+}
+
+
+#' Plot CiberAMP results with plotly (interactive)
+#'
+#' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
+#' @export
+plotly.CiberAMP <- function(output){
+  df.exp <- output[[1]]
+  plot_ly(df.exp, x = ~logFC, y = ~log2FC.SCNAvsDip, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor,"<br>Samples affected (%):",Pat.percentage), type = "scatter", mode = "markers",  marker = list(size = ~Pat.percentage), sizes = c(10,50))
+}
