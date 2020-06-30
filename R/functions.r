@@ -9,17 +9,16 @@
   result <- c("KIRC", "LUSC", "LUAD","BRCA", "PRAD", "THCA", "COAD", "KIRP", "STAD", "LIHC", "HNSC", "ESCA", "KICH", "UCEC", "BLCA", "PAAD", "SARC", "READ", "CHOL", "THYM", "CESC", "GBM")
   return(result)
 }
-
 # This function creates matrices with 0 rows and the specified number (l) of columns
-.setRowMatrix <- function(l){
+.setRowMatrix <- function(nrow, l){
   ncols <- length(l);
-  result <- matrix(ncol = ncols, nrow = 0)
+  result <- matrix(nrow = nrow, ncol = ncols)
   colnames(result) <- l
   return(result)
 }
 
 # This function downloads tumor expression from GDC and includes it in a SummarizedExperiment object knwon as "tumor.exp"
-.downloadExpression <- function(tumor, tumors.with.normal) {
+.downloadExpression <- function(tumor, tumors, tumors.with.normal) {
   if(tumor %in% tumors.with.normal) {
     # If the required cohort has normal samples, then we have to indicate it in the TCGAbiolinks::GDCquery function argument "sample.type".
     cohort <- paste("TCGA-", tumor, sep="")
@@ -30,7 +29,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
+                                    sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -205,101 +204,15 @@
   if(min >= 3) {
     return(min)
   }else if(min < 3){
-    minimum.patients <- 3
-  }
-  return(min)
-}
-
-# This function returns if analysis will continue by group.x <- group.amp or group.x <- group.del
-.setGroupX <- function(group.del, group.amp, group.neutro, minimum.patients) {
-  if(isTRUE(nrow(group.del) < minimum.patients)) {
-
-    return(group.amp)
-
-  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
-
-    return(group.del)
-
-  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
-
-    return(group.amp)
-
-  }
-}
-
-# This function returns if analysis will continue by group.y <- group.neutro or group.y <- group.del
-.setGroupY <- function(group.del, group.amp, group.neutro, minimum.patients) {
-  if(isTRUE(nrow(group.del) < minimum.patients)) {
-
-    return(group.neutro)
-
-  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
-
-    return(group.neutro)
-
-  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
-
-    return(group.del)
-
-  }
-}
-
-# This function evaluates if this is a AMP vs Diploid or DEL vs Diploi case.
-.setCond <- function(group.del, group.amp, group.neutro, minimum.patients) {
-  if(isTRUE(nrow(group.del) < minimum.patients)) {
-
-    return(c("Group AMP vs Group DIPLOID"))
-
-  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
-
-    return(c("Group DEL vs Group DIPLOID"))
-
-  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
-
-    return(c("Group AMP vs Group DEL"))
-
-  }
-}
-
-# This function returns the gene del/amplified % of in patients
-.setSizePat <- function(group.del, group.amp, group.neutro, minimum.patients, del.patients, amp.patients) {
-  if(isTRUE(nrow(group.del) < minimum.patients)) {
-
-    return(amp.patients)
-
-  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
-
-    return(del.patients)
-
-  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
-
-    return(amp.patients + del.patients)
-
-  }
-}
-
-# This function sets the samples IDs to be returned for those who want to consult exactly which barcode is del/amp
-.setPatIDs <- function() {
-  if(isTRUE(nrow(group.del) < minimum.patients)) {
-
-    return(paste(rownames(group.amp), collapse = ","))
-
-  }else if(isTRUE(nrow(group.amp) < minimum.patients)) {
-
-    return(paste(rownames(group.del), collapse = ","))
-
-  }else if(isTRUE(nrow(group.neutro) < minimum.patients)) {
-
-    return(paste(c(rownames(group.amp), rownames(group.del)), collapse = ","))
-
-  }
-}
+    return(3)
+    }
+   }
 
 # This function compares if the genes is differentially expressed when SCN-altered in tumors.
-.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC) {
+.getDataDEGs_SCNA <- function(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene) {
   samplesNT <- rownames(group.y)
   samplesTP <- rownames(group.x)
-  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[,samplesNT],
+  dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[, samplesNT],
                                             mat2 = dataFilt[,samplesTP],
                                             metadata = FALSE,
                                             Cond1type = "Diploid",
@@ -309,13 +222,18 @@
                                             method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
-  return(dataDEGs)
 
+  if(gene %in% rownames(dataDEGs)) {
+    dataDEGs <- dataDEGs[gene, ]
+    return(dataDEGs)
+  }else{
+    return(NULL)
+  }
 }
 
 #This function configures the new line for significant DEGs in SCN-altered samples
 .newSCNAline <- function(dataDEGs.SCNA, cond, SCNA.prop.pat, pat.ids) {
-  returns(c(rownames(dataDEGs.SCNA), dataDEGs.SCNA[1,2], dataDEGs.SCNA[1,3], dataDEGs.SCNA[1,4], dataDEGs.SCNA[1,5], cond, SCNA.prop.pat, pat.ids))
+  return(c(rownames(dataDEGs.SCNA), dataDEGs.SCNA[1,1], dataDEGs.SCNA[1,2], dataDEGs.SCNA[1,3], dataDEGs.SCNA[1,4], dataDEGs.SCNA[1,5], cond, SCNA.prop.pat, pat.ids))
 }
 
 # This function converts the SCNA DE resulting matrix into df
@@ -326,5 +244,207 @@
   SCNA.DEG.result$p.val.SCNAvsDip <- as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip))
   SCNA.DEG.result$FDR.SCNAvsDip <- p.adjust(as.numeric(as.character(SCNA.DEG.result$p.val.SCNAvsDip)), method = "fdr")
   SCNA.DEG.result$Pat.percentage <- as.numeric(as.character(SCNA.DEG.result$Pat.percentage))
+  return(SCNA.DEG.result)
+}
+
+# This function combines dataDEGs and SCNA.DEG.result: 1) evaluated if dataDEGs is null or not and 2) creates a new integrated matrix with both data (if dataDEGs is null -> NAs introduced)
+.mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes) {
+  if(!is.null(dataDEGs) && nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) > 0) {
+    s <-  merge(dataDEGs[dataDEGs$Gene_Symbol %in% genes & dataDEGs$Gene_Symbol %in% cosmic.genes, ], SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
+    s$Condition <- as.character(s$Condition)
+    s$Pat.IDs <- as.character(s$Pat.IDs)
+    s$Tumor <- as.character(s$Tumor)
+    s$TCGA_Tumor <- as.character(s$TCGA_Tumor)
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logFC[i])) {
+        s$logFC[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM[i])) {
+        s$logCPM[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$PValue[i])) {
+        s$PValue[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR[i])) {
+        s$FDR[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Tumor[i])) {
+        s$Tumor[i] <- as.character(s$TCGA_Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$log2FC.SCNAvsDip[i])) {
+        s$log2FC.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM.SCNAvsDip[i])) {
+        s$logCPM.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$p.val.SCNAvsDip[i])) {
+        s$p.val.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR.SCNAvsDip[i])) {
+        s$FDR.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$TCGA_Tumor[i])) {
+        s$TCGA_Tumor[i] <- as.character(s$Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Condition[i])) {
+        s$Condition[i] <- paste("Not SCN-altered in more than", pat.percentage, "% of the samples", sep=" ")
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Pat.percentage[i])) {
+        s$Pat.percentage[i] <- 0
+      }
+    }
+
+    return(s)
+
+  }else if(is.null(dataDEGs)) {
+
+    d <- as.data.frame(.setRowMatrix(nrow(SCNA.DEG.result), c("Gene_Symbol", "logFC", "logCPM", "PValue", "FDR", "Tumor")))
+    d$Gene_Symbol <- SCNA.DEG.result$Gene_Symbol
+    s <-  merge(d, SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
+    s$Condition <- as.character(s$Condition)
+    s$Pat.IDs <- as.character(s$Pat.IDs)
+    s$Tumor <- as.character(s$Tumor)
+    s$TCGA_Tumor <- as.character(s$TCGA_Tumor)
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logFC[i])) {
+        s$logFC[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM[i])) {
+        s$logCPM[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$PValue[i])) {
+        s$PValue[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR[i])) {
+        s$FDR[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Tumor[i])) {
+        s$Tumor[i] <- as.character(s$TCGA_Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$log2FC.SCNAvsDip[i])) {
+        s$log2FC.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$logCPM.SCNAvsDip[i])) {
+        s$logCPM.SCNAvsDip[i] <- 0
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$p.val.SCNAvsDip[i])) {
+        s$p.val.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$FDR.SCNAvsDip[i])) {
+        s$FDR.SCNAvsDip[i] <- 1
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$TCGA_Tumor[i])) {
+        s$TCGA_Tumor[i] <- as.character(s$Tumor[i])
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Condition[i])) {
+        s$Condition[i] <- paste("Not SCN-altered in more than", pat.percentage, " ")
+      }
+    }
+
+    for(i in 1:nrow(s)) {
+      if(is.na(s$Pat.percentage[i])) {
+        s$Pat.percentage[i] <- 0
+      }
+    }
+
+    return(s)
+  }
+}
+
+# This function returns for each copy number altered gene all those cosmic ones highly correlating: 1) CN-altered samples overlap > 70% and 2) DE correlation
+.getOverlapCOSMIC <- function(SCNA.DEG.result, genes, cosmic.genes) {
+  int.matrix <- .setRowMatrix(0, colnames(SCNA.DEG.result))
+  input <- SCNA.DEG.result[SCNA.DEG.result$Gene_Symbol %in% genes & SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]
+  cosmic <- SCNA.DEG.result[SCNA.DEG.result$Gene_Symbol %in% cosmic.genes & SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]
+  colnames(cosmic) <- paste(colnames(cosmic), "COSMIC", sep="_")
+
+  if(nrow(input) > 0 & nrow(cosmic) > 0) {
+    for(j in 1:nrow(input)) {
+      for(k in 1:nrow(cosmic)) {
+        if(input$TCGA_Tumor[j] == cosmic$TCGA_Tumor[k] & as.character(input$Condition[j]) == as.character(cosmic$Condition[k])) {
+          a <- unlist(strsplit(as.character(input$Pat.IDs[j]), ","))
+          b <- unlist(strsplit(as.character(cosmic$Pat.IDs[k]), ","))
+          int <- intersect(a, b)
+          a.l <- length(a)
+          b.l <- length(b)
+          int.l <- length(int)
+          prop.gene.cosmic <- (int.l/a.l) * 100
+          prop.cosmic.gene <- (int.l/b.l) * 100
+          if(prop.gene.cosmic >= 70) {
+            line <- cbind(as.vector(input[j,]), cosmic[k, ])
+            line$PROP_GENE_COSMIC <- prop.gene.cosmic
+            line$PROP_COSMIC_GENE <- prop.cosmic.gene
+            int.matrix <- rbind(int.matrix, line)
+          }
+        }
+      }
+    }
+  }
+  return(int.matrix)
 }
 
