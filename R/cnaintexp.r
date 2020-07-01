@@ -41,7 +41,7 @@
 #' @export
 #'
 #' @examples
-CNAintEXP <- function(genes = c(),
+ciberAMP <- function(genes = c(),
                       cohorts = c(),
                       writePath = NULL,
                       pat.percentage = 10,
@@ -258,6 +258,7 @@ all_tumors <- function(){
 }
 
 #' Plot CiberAMP results with ggplot
+#' @param output List of results from CNAintEXP function.
 #'
 #' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
 #' @export
@@ -269,10 +270,12 @@ ggplot.CiberAMP <- function(output){
 
 
 #' Interactive plot with ShinyR package
+#' @param df First or second data frame from CNAintEXP list of results. Contains the correlation results for SCNA and mRNA differential expression for 1) queried or 2) COSMIC CGC genes.
+#' @param int.df Third data frame from CNAintEXP list of results. Contains overlappings between SCN-altered queried and COSMIC CGC genes.
 #'
 #' @return It allows the user to directly interact with data using a shiny app
 #' @export
-int.CiberAMP <- function(df, int.df){
+int.plot.CiberAMP <- function(df, int.df){
 
   require(shiny)
   require(plotly)
