@@ -3,3 +3,5 @@
 export(CNAintEXP)
 export(all_cosmic_genes)
 export(all_tumors)
+export(ggplot.CiberAMP)
+export(int.CiberAMP)

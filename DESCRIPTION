@@ -15,5 +15,9 @@ Imports:
     RTCGAToolbox,
     car,
     onewaytests,
-    ggrepel
+    ggrepel,
+    shiny,
+    plotly,
+    DT,
+    dplyr
 RoxygenNote: 7.1.0
