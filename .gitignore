@@ -1,5 +1,9 @@
-.*
+.R*
 /GDCdata/*
 *.gz
 *.png
+*.rda
+*.txt
+gdac.*
+data*
 .Rproj.user
