@@ -272,4 +272,84 @@ ggplot.CiberAMP <- function(output){
 #'
 #' @return It allows the user to directly interact with data using a shiny app
 #' @export
+int.CiberAMP <- function(df, int.df){
+
+  require(shiny)
+  require(plotly)
+  require(DT)
+  require(dplyr)
+
+  cohorts.list = list("BLCA" = "BLCA", "ACC" = "ACC", "BRCA" = "BRCA", "CESC" = "CESC", "CHOL" = "CHOL", "COAD" = "COAD", "DLBC" = "DLBC", "ESCA" = "ESCA", "GBM" = "GBM", "HNSC" = "HNSC", "KICH" = "KICH", "KIRC" = "KIRC", "KIRP" = "KIRP", "LAML" = "LAML", "LGG" = "LGG", "LIHC" = "LIHC", "LUAD" = "LUAD", "LUSC" = "LUSC", "MESO" = "MESO", "OV" = "OV", "PAAD" = "PAAD", "PRAD" = "PRAD", "READ" = "READ", "SARC" = "SARC", "SKCM" = "SKCM", "STAD" = "STAD", "TGCT" = "TGCT", "THCA" = "THCA", "THYM" = "THYM", "UCEC" = "UCEC", "UCS" = "UCS", "UVM" = "UVM" )
+  tumors <- .tumors_all()
+  tumors.with.normal <- .tumors_N()
+  df$KEY <- paste(df$Gene_Symbol, df$TCGA_Tumor, sep="_")
+  # Define UI for application that draws a histogram
+  ui <- fluidPage(
+
+    # Application title
+    titlePanel("CiberAMP"),
+
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(
+      sidebarPanel(
+        textAreaInput("genes", "Enter your genes", width = "100%", height = "250px", value = "ALL"),
+        actionButton("submit", "Submit"),
+        sliderInput("pat.perc", "Select the minimum copy number altered samples", value = 10, min = 1, max = 100),
+        numericInput("p.val.thr", "Select the adjusted p-value threshold.", value = 0.05, min = 0, max = 1),
+        numericInput("tvsn.fc.thr", "Select the minimum fold-change threshold when compare tumor vs normal samples.", value = 1, min = 0, max = Inf),
+        numericInput("cna.fc.thr", "Select the minimum fold-change threshold when compare CNA vs diploid samples.", value = 1, min = 0, max = Inf),
+        width = 3
+      ),
+
+      # Show a plot of the generated distribution
+      mainPanel(
+        br(),
+        plotlyOutput("plot", width = "100%", height = "100%"),
+        br(),
+        br(),
+        conditionalPanel(condition = "!is.null(cosmic)", DT::dataTableOutput("cosmic")),
+        br()
+      )
+    )
+  )
+
+  # Define server logic required to draw a histogram
+  server <- function(input, output, session) {
+
+    g <- eventReactive(input$submit, {
+      unlist(strsplit(gsub("\n", ",", req(input$genes)), split = ","))
+    })
+
+    d <- reactive({
+      if("ALL" %in% g()) {
+        df[abs(df$logFC) >= input$tvsn.fc.thr & abs(df$log2FC.SCNAvsDip) >= input$cna.fc.thr & df$FDR.SCNAvsDip <= input$p.val.thr & df$Pat.percentage >= input$pat.perc, ]
+      }else{
+        df[df$Gene_Symbol %in% g() & abs(df$logFC) >= input$tvsn.fc.thr & abs(df$log2FC.SCNAvsDip) >= input$cna.fc.thr & df$FDR.SCNAvsDip <= input$p.val.thr & df$Pat.percentage >= input$pat.perc, ]
+      }
+    })
+
+    output$plot <- renderPlotly({ plot_ly(d(), x = ~logFC, y = ~log2FC.SCNAvsDip, source = "plot", key = ~KEY, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor, "<br>CNA samples (%):", Pat.percentage), type = "scatter", mode = "markers", marker = list(size = ~Pat.percentage, opacity = 0.8, line = list(color = "white", width = 2)), color = ~TCGA_Tumor) %>%
+        layout(title = "CiberAMP plot for TCGA cohorts", xaxis = list(title = "mRNA DE tumor vs normal samples (log2(FC))", showgrid = TRUE), yaxis = list(title = "mRNA DE SCN-altered vs diploid tumor samples (log2(FC))", showgrid = TRUE))
+    })
+
+    output$cosmic <- DT::renderDataTable({
+      a <- event_data("plotly_click", source = "plot")
+      if(length(a)) {
+        a <- a[["key"]]
+        a <- strsplit(as.character(a), split = "_")
+        a <- unlist(a)
+        cosmic <- int.df[int.df$Gene_Symbol %in% a[1] & int.df$TCGA_Tumor %in% a[2], c("Gene_Symbol", "TCGA_Tumor", "Gene_Symbol_COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE")]
+        if(nrow(cosmic) > 0) {
+          DT::datatable(cosmic, options = list(scrollX = TRUE)) %>% formatRound(c("PROP_GENE_COSMIC", "PROP_COSMIC_GENE"), 2)
+        }else{
+          NULL
+        }
+      }else if(!length(a)) {
+        NULL
+      }
+    })
+  }
+
+  shinyApp(ui = ui, server = server)
+
 }
