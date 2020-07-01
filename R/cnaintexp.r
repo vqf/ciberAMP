@@ -41,7 +41,7 @@
 #' @export
 #'
 #' @examples
-CNAintEXP <- function(genes = c(),
+ciberAMP <- function(genes = c(),
                       cohorts = c(),
                       writePath = NULL,
                       pat.percentage = 10,
@@ -275,7 +275,7 @@ ggplot.CiberAMP <- function(output){
 #'
 #' @return It allows the user to directly interact with data using a shiny app
 #' @export
-int.CiberAMP <- function(df, int.df){
+int.plot.CiberAMP <- function(df, int.df){
 
   require(shiny)
   require(plotly)
