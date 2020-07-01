@@ -267,11 +267,9 @@ ggplot.CiberAMP <- function(output){
 }
 
 
-#' Plot CiberAMP results with plotly (interactive)
+
+#' Interactive plot with ShinyR package
 #'
-#' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
+#' @return It allows the user to directly interact with data using a shiny app
 #' @export
-plotly.CiberAMP <- function(output){
-  df.exp <- output[[1]]
-  plot_ly(df.exp, x = ~logFC, y = ~log2FC.SCNAvsDip, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor,"<br>Samples affected (%):",Pat.percentage), type = "scatter", mode = "markers",  marker = list(size = ~Pat.percentage), sizes = c(10,50))
 }
