@@ -45,7 +45,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary solid Tumor", "Metastatic"))
+                                    sample.type = c("Primary Tumor", "Metastatic"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
