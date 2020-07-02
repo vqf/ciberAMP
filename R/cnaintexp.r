@@ -64,8 +64,9 @@ ciberAMP <- function(genes = c(),
 
   list.of.packages <- c("TCGAbiolinks", "SummarizedExperiment", "dplyr", "stringr", "RTCGAToolbox", "car", "EDASeq", "edgeR")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-  if(length(new.packages)) install.packages(new.packages)
+  if(length(new.packages) > 0) {install.packages(new.packages)}
 
+  require(list.of.packages)
 
   cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
@@ -294,6 +295,10 @@ ggplot.CiberAMP <- function(output){
 #' @return It allows the user to directly interact with data using a shiny app
 #' @export
 int.plot.CiberAMP <- function(df, int.df){
+
+  list.of.packages <- c("shiny", "plotly", "DT", "dplyr")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
 
   require(shiny)
   require(plotly)
