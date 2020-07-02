@@ -444,7 +444,13 @@
         }
       }
     }
+
+    if(nrow(int.matrix) > 0) {
+      return(int.matrix)
+    }else{
+      int.matrix <- .setRowMatrix(nrow = 0, c("Gene_Symbol", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "TCGA_Tumor", "Condition", "Pat.percentage", "Pat.IDs", "Gene_Symbol_COSMIC", "log2FC.SCNAvsDip_COSMIC", "logCPM.SCNAvsDip_COSMIC", "p.val.SCNAvsDip_COSMIC", "FDR.SCNAvsDip_COSMIC", "TCGA_Tumor_COSMIC", "Condition_COSMIC", "Pat.percentage_COSMIC", "Pat.IDs_COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE"))
+      return(int.matrix)
+    }
   }
-  return(int.matrix)
 }
 
