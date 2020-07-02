@@ -205,34 +205,47 @@ ciberAMP <- function(genes = c(),
         SCNA.DEG.result <- rbind(SCNA.DEG.result, line)
 
       }
-
     }
 
     SCNA.DEG.result <- .convertToDF(SCNA.DEG.result)
 
-    COSMIC.overlap <- .getOverlapCOSMIC(SCNA.DEG.result, genes, cosmic.genes)
+    if(nrow(SCNA.DEG.result) > 0) {
+      merge.dataDEGs <- .mergeDEGs(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes)
 
-    merge.dataDEGs <- .mergeDEGs(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes)
-
-    if(is.null(EXPintCNA.results)) {
-      EXPintCNA.results <- merge.dataDEGs
+      if(is.null(EXPintCNA.results)) {
+        EXPintCNA.results <- merge.dataDEGs
+      }else{
+        EXPintCNA.results <- rbind(EXPintCNA.results, merge.dataDEGs)
+      }
     }else{
-      EXPintCNA.results <- rbind(EXPintCNA.results, merge.dataDEGs)
+      merge.dataDEGs <- .setRowMatrix(nrow = 0, c("Gene_Symbol", "logFC", "logCPM", "PValue", "FDR", "Tumor", "log2FC.SCNAvsDip", "logCPM.SCNAvsDip", "p.val.SCNAvsDip", "FDR.SCNAvsDip", "TCGA_Tumor", "Condition", "Pat.percentage", "Pat.IDs"))
+      if(is.null(EXPintCNA.results)) {
+        EXPintCNA.results <- merge.dataDEGs
+      }else{
+        EXPintCNA.results <- rbind(EXPintCNA.results, merge.dataDEGs)
+      }
     }
+
+    COSMIC.overlap <- .getOverlapCOSMIC(SCNA.DEG.result, genes, cosmic.genes)
 
     if(is.null(COSMIC.ov.result)) {
       COSMIC.ov.result <- COSMIC.overlap
     }else{
       COSMIC.ov.result <- rbind(COSMIC.ov.result, COSMIC.overlap)
     }
+
   }
 
-  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", quote=FALSE)
-  write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", quote=FALSE)
-  write.table(COSMIC.ov.result, "CiberAMP COSMIC overlap results.txt", sep="\t", quote=FALSE)
+  if(nrow(EXPintCNA.results) > 0 && EXPintCNA.results$Gene_Symbol %in% genes){
+    write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", quote=FALSE)
+    write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", quote=FALSE)
+    write.table(COSMIC.ov.result, "CiberAMP COSMIC overlap results.txt", sep="\t", quote=FALSE)
 
-  end <- list(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], COSMIC.ov.result)
-  return(end)
+    end <- list(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], COSMIC.ov.result)
+    return(end)
+  }else{
+    print("Any found")
+  }
 }
 
 #' Get available genes
