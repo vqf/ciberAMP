@@ -62,6 +62,11 @@ ciberAMP <- function(genes = c(),
                       exp.mat = NULL,
                       cna.mat = NULL) {
 
+  list.of.packages <- c("TCGAbiolinks", "SummarizedExperiment", "dplyr", "stringr", "RTCGAToolbox", "car", "EDASeq", "edgeR")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages)) install.packages(new.packages)
+
+
   cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
   sign <- c(genes, cosmic.genes)
