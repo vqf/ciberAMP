@@ -250,7 +250,7 @@
 # This function combines dataDEGs and SCNA.DEG.result: 1) evaluated if dataDEGs is null or not and 2) creates a new integrated matrix with both data (if dataDEGs is null -> NAs introduced)
 .mergeDEGs <- function(dataDEGs, SCNA.DEG.result, pat.percentage, genes, cosmic.genes) {
   if(!is.null(dataDEGs) && nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) > 0) {
-    s <-  merge(dataDEGs[dataDEGs$Gene_Symbol %in% genes & dataDEGs$Gene_Symbol %in% cosmic.genes, ], SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
+    s <-  merge(dataDEGs, SCNA.DEG.result, by = "Gene_Symbol", all = TRUE)
     s$Condition <- as.character(s$Condition)
     s$Pat.IDs <- as.character(s$Pat.IDs)
     s$Tumor <- as.character(s$Tumor)
@@ -330,7 +330,7 @@
 
     return(s)
 
-  }else if(is.null(dataDEGs)) {
+  }else if(is.null(dataDEGs) || nrow(dataDEGs[dataDEGs$Gene_Symbol %in% genes, ]) == 0) {
 
     d <- as.data.frame(.setRowMatrix(nrow(SCNA.DEG.result), c("Gene_Symbol", "logFC", "logCPM", "PValue", "FDR", "Tumor")))
     d$Gene_Symbol <- SCNA.DEG.result$Gene_Symbol
