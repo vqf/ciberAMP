@@ -19,5 +19,7 @@ Imports:
     shiny,
     plotly,
     DT,
-    dplyr
+    dplyr,
+    EDASeq,
+    edgeR
 RoxygenNote: 7.1.0

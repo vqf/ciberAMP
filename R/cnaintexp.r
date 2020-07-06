@@ -62,6 +62,10 @@ ciberAMP <- function(genes = c(),
                       exp.mat = NULL,
                       cna.mat = NULL) {
 
+  list.of.packages <- c("TCGAbiolinks", "SummarizedExperiment", "dplyr", "stringr", "RTCGAToolbox", "car", "EDASeq", "edgeR")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+
   cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
   sign <- c(genes, cosmic.genes)
@@ -290,6 +294,10 @@ ggplot.CiberAMP <- function(output){
 #' @export
 int.plot.CiberAMP <- function(df, int.df){
 
+  list.of.packages <- c("shiny", "plotly", "DT", "dplyr")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+
   require(shiny)
   require(plotly)
   require(DT)
@@ -310,10 +318,10 @@ int.plot.CiberAMP <- function(df, int.df){
       sidebarPanel(
         textAreaInput("genes", "Enter your genes", width = "100%", height = "250px", value = "ALL"),
         actionButton("submit", "Submit"),
-        sliderInput("pat.perc", "Select the minimum copy number altered samples", value = 10, min = 1, max = 100),
+        sliderInput("pat.perc", "Select the minimum copy number altered samples", value = 10, min = 0, max = 100),
         numericInput("p.val.thr", "Select the adjusted p-value threshold.", value = 0.05, min = 0, max = 1),
-        numericInput("tvsn.fc.thr", "Select the minimum fold-change threshold when compare tumor vs normal samples.", value = 1, min = 0, max = Inf),
-        numericInput("cna.fc.thr", "Select the minimum fold-change threshold when compare CNA vs diploid samples.", value = 1, min = 0, max = Inf),
+        numericInput("tvsn.fc.thr", "Select the minimum fold-change threshold when compare tumor vs normal samples.", value = 0, min = 0, max = Inf),
+        numericInput("cna.fc.thr", "Select the minimum fold-change threshold when compare CNA vs diploid samples.", value = 0, min = 0, max = Inf),
         width = 3
       ),
 
@@ -344,7 +352,7 @@ int.plot.CiberAMP <- function(df, int.df){
       }
     })
 
-    output$plot <- renderPlotly({ plot_ly(d(), x = ~logFC, y = ~log2FC.SCNAvsDip, source = "plot", key = ~KEY, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor, "<br>CNA samples (%):", Pat.percentage), type = "scatter", mode = "markers", marker = list(size = ~Pat.percentage, opacity = 0.8, line = list(color = "white", width = 2)), color = ~TCGA_Tumor) %>%
+    output$plot <- renderPlotly({ plot_ly(d(), x = ~logFC, y = ~log2FC.SCNAvsDip, source = "plot", key = ~KEY, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor, "<br>CNA samples (%):", Pat.percentage), type = "scatter", mode = "markers", marker = list(size = ~Pat.percentage, sizes = c(1, 100), opacity = 0.8, line = list(color = "white", width = 2)), color = ~TCGA_Tumor) %>%
         layout(title = "CiberAMP plot for TCGA cohorts", xaxis = list(title = "mRNA DE tumor vs normal samples (log2(FC))", showgrid = TRUE), yaxis = list(title = "mRNA DE SCN-altered vs diploid tumor samples (log2(FC))", showgrid = TRUE))
     })
 
