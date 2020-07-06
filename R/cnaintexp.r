@@ -364,7 +364,7 @@ int.plot.CiberAMP <- function(df, int.df){
         a <- unlist(a)
         cosmic <- int.df[int.df$Gene_Symbol %in% a[1] & int.df$TCGA_Tumor %in% a[2], c("Gene_Symbol", "TCGA_Tumor", "Gene_Symbol_COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE")]
         if(nrow(cosmic) > 0) {
-          DT::datatable(cosmic, options = list(scrollX = TRUE)) %>% formatRound(c("PROP_GENE_COSMIC", "PROP_COSMIC_GENE"), 2)
+          DT::datatable(cosmic, options = list(scrollX = TRUE), rownames = FALSE) %>% formatRound(c("PROP_GENE_COSMIC", "PROP_COSMIC_GENE"), 2)
         }else{
           NULL
         }
