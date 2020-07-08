@@ -14,12 +14,12 @@ Imports:
     stringr,
     RTCGAToolbox,
     car,
-    onewaytests,
-    ggrepel,
     shiny,
     plotly,
     DT,
-    dplyr,
     EDASeq,
-    edgeR
+    edgeR,
+    ggplot2
 RoxygenNote: 7.1.0
+VignetteBuilder: knitr
+    Suggests: BiocStyle, knitr, rmarkdown

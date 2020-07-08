@@ -18,12 +18,6 @@
 #' @param filt.FDR.DEA Threshold to filter differentially expressed genes according their corrected p-value.
 #' Passed to `TCGAanalyze_DEA`.
 #' @param filt.FC Parameter for `filter2`. Defaults to 1.
-#' @param dea.method Differential expression analysis method. Either `glmLRT` or `exactTest`.
-#' `glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
-#' `exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
-#' distributed counts.
-#' @param normality.thr Threshold for normality tests. Defaults to 0.05.
-#' @param var.thr Threshold for tests of equal variance. Defaults to 0.05.
 #' @param p.val.thr Threshold for reported p values. Defaults to 1 (report all).
 #' @param cna.thr Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`.
 #' `Deep`, consider likely homozygous deletions for loss and high-level amplifications (high copy-number, focal) for gain.
@@ -54,9 +48,6 @@ ciberAMP <- function(genes = c(),
                       filt.eta = 0.05,
                       filt.FDR.DEA = 0.01,
                       filt.FC = 1,
-                      dea.method ="exactTest",
-                      normality.thr = 0.05,
-                      var.thr = 0.05,
                       p.val.thr = 1,
                       cna.thr = "Deep",
                       exp.mat = NULL,
