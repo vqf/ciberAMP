@@ -18,12 +18,6 @@
 #' @param filt.FDR.DEA Threshold to filter differentially expressed genes according their corrected p-value.
 #' Passed to `TCGAanalyze_DEA`.
 #' @param filt.FC Parameter for `filter2`. Defaults to 1.
-#' @param dea.method Differential expression analysis method. Either `glmLRT` or `exactTest`.
-#' `glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
-#' `exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
-#' distributed counts.
-#' @param normality.thr Threshold for normality tests. Defaults to 0.05.
-#' @param var.thr Threshold for tests of equal variance. Defaults to 0.05.
 #' @param p.val.thr Threshold for reported p values. Defaults to 1 (report all).
 #' @param cna.thr Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`.
 #' `Deep`, consider likely homozygous deletions for loss and high-level amplifications (high copy-number, focal) for gain.
@@ -54,9 +48,6 @@ ciberAMP <- function(genes = c(),
                       filt.eta = 0.05,
                       filt.FDR.DEA = 0.01,
                       filt.FC = 1,
-                      dea.method ="exactTest",
-                      normality.thr = 0.05,
-                      var.thr = 0.05,
                       p.val.thr = 1,
                       cna.thr = "Deep",
                       exp.mat = NULL,
@@ -279,9 +270,8 @@ all_tumors <- function(){
 #'
 #' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
 #' @export
-ggplot.CiberAMP <- function(output){
-  df.exp <- output[[1]]
-  ggplot(df.exp, aes(x = logFC, y = log2FC.SCNAvsDip, color = TCGA_Tumor)) + geom_point(aes(size = Pat.percentage), shape = ifelse(df.exp$Condition %in% "Group AMP vs Group DIPLOID", 17, 16)) + scale_colour_manual(values = c("ACC" = "#ffcccc", "BLCA" = "#ffd9cc", "BRCA" = "#ffe6cc", "CHOL" = "#fff2cc", "COAD" = "#ffffcc", "CESC" = "#f2ffcc", "DLBC" = "#e6ffcc", "ESCA" = "#d9ffcc", "GBM" = "#ccffcc", "HNSC" = "#ccffd9", "KIRC" = "#ccffe6", "KIRP" = "#ccfff2", "KICH" = "#ccffff", "LAML" = "#ccf2ff", "LIHC" = "#cce6ff", "LGG" = "#ccd9ff", "LUAD" = "#ccccff", "LUSC" = "#d9ccff", "MESO" = "#e6ccff", "OV" = "#f2ccff", "PAAD" ="#ffccff", "PCPG" = "#ffccf2", "PRAD" = "#ffcce6", "READ" = "#ffccd9", "SARC" = "#ffcccc", "SKCM" = "#ff6666", "STAD" = "#b366ff",  "TGCT" = "#668cff", "THCA" = "#ff8c66", "THYM" = "#ff0000", "UCEC" = "#848785", "UCS" = "#767676", "UVM" = "#86C0C3")) + scale_size_continuous(range = c(4,20)) + theme_minimal() + xlab("mRNA diff. exp. tumor vs normal samples (log2(FC))") + ylab("mRNA diff. exp. SCN-altered vs diploid tumor samples (log2(FC))")
+ggplot.CiberAMP <- function(df.exp){
+  ggplot(df.exp, aes(x = logFC, y = log2FC.SCNAvsDip, color = TCGA_Tumor)) + geom_point(aes(size = Pat.percentage), shape = ifelse(df.exp$Condition %in% "Group AMP vs Group DIPLOID", 17, 16)) + scale_colour_manual(values = c("ACC" = "#ffcccc", "BLCA" = "#ffd9cc", "BRCA" = "#ffe6cc", "CHOL" = "#fff2cc", "COAD" = "#ffffcc", "CESC" = "#f2ffcc", "DLBC" = "#e6ffcc", "ESCA" = "#d9ffcc", "GBM" = "#ccffcc", "HNSC" = "#ccffd9", "KIRC" = "#ccffe6", "KIRP" = "#ccfff2", "KICH" = "#ccffff", "LAML" = "#ccf2ff", "LIHC" = "#cce6ff", "LGG" = "#ccd9ff", "LUAD" = "#ccccff", "LUSC" = "#d9ccff", "MESO" = "#e6ccff", "OV" = "#f2ccff", "PAAD" ="#ffccff", "PCPG" = "#ffccf2", "PRAD" = "#ffcce6", "READ" = "#ffccd9", "SARC" = "#ffcccc", "SKCM" = "#ff6666", "STAD" = "#b366ff",  "TGCT" = "#668cff", "THCA" = "#ff8c66", "THYM" = "#ff0000", "UCEC" = "#848785", "UCS" = "#767676", "UVM" = "#86C0C3")) + scale_size_continuous(range = c(1,10)) + theme_minimal() + xlab("mRNA diff. exp. tumor vs normal samples (log2(FC))") + ylab("mRNA diff. exp. SCN-altered vs diploid tumor samples (log2(FC))")
 }
 
 
