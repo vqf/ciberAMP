@@ -106,8 +106,7 @@ CiberAMP will not use this mapping data. It is only necessary if we want to visu
 
 ```{r, echo=TRUE, results="hide"}
 library(ciberAMP)
-#x <- ciberAMP(genes = reg.genes$hgnc_symbol, cohorts = c("LUSC", "HNSC"), pat.percentage = 0, writePath = "/Users/lab02/Desktop/CiberAMP vignette folder")
-x <- readRDS("/Users/lab02/Desktop/CiberAMP vignette folder/my_data.rds")
+#x <- ciberAMP(genes = reg.genes$hgnc_symbol, cohorts = c("LUSC", "HNSC"), pat.percentage = 0, writePath = "PATH_TO_FOLDER")
 ```
 This is a computing expensive step, so we already provide you the results for the previous line. You can extract them easily.
 ```{r, echo=TRUE, results="hide"}
