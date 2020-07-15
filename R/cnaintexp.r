@@ -96,7 +96,7 @@ ciberAMP <- function(genes = c(),
                                     filt.var.cutoff, filt.eta, filt.FC)
 
 
-      dataDEGs <- .getDataDEGs(tumor, dataFilt, filt.FDR.DEA, filt.FC, dea.method)
+      dataDEGs <- .getDataDEGs(tumor, dataFilt, filt.FDR.DEA, filt.FC)
       write.table(dataDEGs, file = paste("dataDEGs_", tumor, ".txt", sep=""), sep="\t", quote=FALSE)
 
     }else if(is.null(exp.mat) && tumor != tumors.with.normal){
