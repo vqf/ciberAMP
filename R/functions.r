@@ -29,7 +29,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
+                                    sample.type = c("Primary solid Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -45,7 +45,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TP", "TM"))
+                                    sample.type = c("Primary solid Tumor", "Metastatic"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -62,7 +62,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TB"))
+                                    sample.type = c("Primary Blood Derived Cancer - Peripheral Blood"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -79,7 +79,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TP"))
+                                    sample.type = c("Primary solid Tumor"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -113,7 +113,7 @@
 }
 
 # This function compares tumor vs normal expression differences and uses "edgeR::exactTest" function to assign significance to those comparisons: finds differentially expressed genes (DEGs)
-.getDataDEGs <- function(tumor, dataFilt, FDR.DEA, FC, dea.method){
+.getDataDEGs <- function(tumor, dataFilt, FDR.DEA, FC){
 
 
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
@@ -127,7 +127,7 @@
                                             Cond2type = "Tumor",
                                             fdr.cut = FDR.DEA,
                                             logFC.cut = FC,
-                                            method = dea.method)
+                                            method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
   dataDEGs$Gene_Symbol <- rownames(dataDEGs)
