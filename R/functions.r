@@ -29,7 +29,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TP", "NT"))
+                                    sample.type = c("Primary Tumor", "Solid Tissue Normal"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -45,7 +45,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TP", "TM"))
+                                    sample.type = c("Primary Tumor", "Metastatic"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -62,7 +62,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TB"))
+                                    sample.type = c("Primary Blood Derived Cancer - Peripheral Blood"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -79,7 +79,7 @@
                                     platform = "Illumina HiSeq",
                                     file.type = "results",
                                     experimental.strategy = "RNA-Seq",
-                                    sample.type = c("TP"))
+                                    sample.type = c("Primary Tumor"))
     TCGAbiolinks::GDCdownload(query)
 
     tumor.exp <- TCGAbiolinks::GDCprepare(query = query)
@@ -117,9 +117,9 @@
 
 
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
-                                                   typesample = c("NT"))
+                                                   typesample = c("Solid Tissue Normal"))
   samplesTP <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
-                                                   typesample = c("TP"))
+                                                   typesample = c("Primary Tumor"))
   dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[,samplesNT],
                                             mat2 = dataFilt[,samplesTP],
                                             metadata = FALSE,
