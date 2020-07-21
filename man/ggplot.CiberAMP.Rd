@@ -4,7 +4,7 @@
 \alias{ggplot.CiberAMP}
 \title{Plot CiberAMP results with ggplot}
 \usage{
-ggplot.CiberAMP(output)
+ggplot.CiberAMP(df.exp)
 }
 \arguments{
 \item{output}{List of results from CNAintEXP function.}

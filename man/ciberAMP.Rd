@@ -18,9 +18,6 @@ ciberAMP(
   filt.eta = 0.05,
   filt.FDR.DEA = 0.01,
   filt.FC = 1,
-  dea.method = "exactTest",
-  normality.thr = 0.05,
-  var.thr = 0.05,
   p.val.thr = 1,
   cna.thr = "Deep",
   exp.mat = NULL,
@@ -56,15 +53,6 @@ Passed to `TCGAanalyze_Normalization`.}
 Passed to `TCGAanalyze_DEA`.}
 
 \item{filt.FC}{Parameter for `filter2`. Defaults to 1.}
-
-\item{dea.method}{Differential expression analysis method. Either `glmLRT` or `exactTest`.
-`glmLRT`: Fit a negative binomial generalized log-linear model to the read counts for each gene.
-`exactTest`: Compute genewise exact tests for differences in the means between two groups of negative-binomially
-distributed counts.}
-
-\item{normality.thr}{Threshold for normality tests. Defaults to 0.05.}
-
-\item{var.thr}{Threshold for tests of equal variance. Defaults to 0.05.}
 
 \item{p.val.thr}{Threshold for reported p values. Defaults to 1 (report all).}
 
