@@ -46,10 +46,12 @@ We are wonder if any of the genes lodged at these chromosomal arms would be sign
 
 So, the first step was to create a data frame containing all the genes lodged at chromosome 3, 8 and chromosomal arm 5p. Actually, in this examples we are going to focus only on protein-coding genes, removing all the other type from the analysis.
 
-```{r, echo=TRUE, width = 160}
+```{r, echo=TRUE, width = 160, render=F}
 library(biomaRt)
 library(stringr)
 library(GenomicRanges)
+```
+```{r, echo=TRUE, width = 160}
 
 # First, we get all the genes inside 3p, 3q, 5p, 8p and 8q chromosomal arms.
 
