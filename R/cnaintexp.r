@@ -342,7 +342,7 @@ int.plot.CiberAMP <- function(df, int.df){
       }
     })
 
-    output$plot <- renderPlotly({ plot_ly(d(), x = ~logFC, y = ~log2FC.SCNAvsDip, source = "plot", key = ~KEY, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor, "<br>CNA samples (%):", Pat.percentage), type = "scatter", mode = "markers", marker = list(size = ~Pat.percentage, sizes = c(1, 100), opacity = 0.8, line = list(color = "white", width = 2)), color = ~TCGA_Tumor) %>%
+    output$plot <- plotly::renderPlotly({ plotly::plot_ly(d(), x = ~logFC, y = ~log2FC.SCNAvsDip, source = "plot", key = ~KEY, text = ~paste("Symbol:", Gene_Symbol, "<br>Condition:", Condition, "<br>Tumor:", TCGA_Tumor, "<br>CNA samples (%):", Pat.percentage), type = "scatter", mode = "markers", marker = list(size = ~Pat.percentage, sizes = c(1, 100), opacity = 0.8, line = list(color = "white", width = 2)), color = ~TCGA_Tumor) %>%
         layout(title = "CiberAMP plot for TCGA cohorts", xaxis = list(title = "mRNA DE tumor vs normal samples (log2(FC))", showgrid = TRUE), yaxis = list(title = "mRNA DE SCN-altered vs diploid tumor samples (log2(FC))", showgrid = TRUE))
     })
 
