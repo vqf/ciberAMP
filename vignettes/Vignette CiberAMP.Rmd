@@ -111,7 +111,7 @@ library(ciberAMP)
 This is a computing expensive step, so we already provide you the results for the previous line. You can extract them easily.
 ```{r, echo=TRUE, results="hide"}
 library(ciberAMP)
-x <- readRDS("/Users/lab02/Desktop/CiberAMP vignette folder/my_data.rds")
+x <- data(my_data, package = "ciberAMP_debug")
 ```
 In any case, if you have time to run it by yourself, we leave you here a description of all CiberAMP arguments for you notice:
 
