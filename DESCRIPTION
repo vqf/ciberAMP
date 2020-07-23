@@ -1,11 +1,11 @@
 Package: ciberAMP
-Title: What the Package Does (one line, title case)
+Title: mRNA and copy number data integrative algorithm.
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: person("Rubén", "Fernández", email = "ruben.fdez.caloto@gmail.com", role = c("aut", "cre")), person("Víctor", "Quesada", role = c("aut", "cre"))
+Description: ciberAMP performs copy number and mRNA expression data integration. It allows users to finde out copy number-driven gene's differential expression. It uses GISTIC and RNAseq data from TCGA to analyze the more than 11.000 samples across 33 different tumor cohorts.
 Depends: R (>= 3.5.1)
-biocViews:
-License: What license is it under?
+biocViews: SCNAs, RNAseq, copy number alteration, copy number and expression integration
+License:
 Encoding: UTF-8
 LazyData: true
 Imports: 
