@@ -9,8 +9,7 @@ License:
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    purrrogress (== 0.1.1),
-    TCGAbiolinks (>= 2.15.1),
+    TCGAbiolinks,
     SummarizedExperiment,
     dplyr,
     stringr,
