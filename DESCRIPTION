@@ -9,6 +9,7 @@ License:
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    purrrogress,
     TCGAbiolinks,
     SummarizedExperiment,
     dplyr,
@@ -23,7 +24,7 @@ Imports:
     dplyr,
     EDASeq,
     edgeR
-Remotes: BioinformaticsFMRP/TCGAbiolinks
+Remotes:  github::halpo/purrrogress, BioinformaticsFMRP/TCGAbiolinks
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
