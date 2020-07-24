@@ -145,9 +145,9 @@ realTP <- NULL
 
   tp <- .primaryTumorName()
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
-                                                   typesample = c("Solid Tissue Normal"))
+                                                   typesample = c("NT"))
   samplesTP <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
-                                                   typesample = c(tp))
+                                                   typesample = c("TP"))
   dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = dataFilt[,samplesNT],
                                             mat2 = dataFilt[,samplesTP],
                                             metadata = FALSE,
