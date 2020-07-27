@@ -68,3 +68,21 @@ The x[[1]] data frame contains differential expression results for queried genes
 * Column 12  -> % of samples CN-altered.
 * Column 14 -> CN-altered TCGA sample barcodes.
 
+The x[[2]] data frame contains differential expression results for COSMIC cancer census genes list. Column information is exactly the same as x[[1]].
+
+Finally, the x[[3]] contains overlapping information between queried and CGC genes copy number overlap between samples. Genes may be CN-altered due to being lodged next to well-known and transcriptionally active in cancer cancer-related genes. In this data frame, you can consult if any of your queried CN-alterations would be highly correlated to any of known oncodrivers or tumor suppressors:
+
+* Column 1 -> queried gene approved symbol.
+* Column 2:5 -> queried gene copy number altered vs diploid tumor samples differential expression results.
+* Column 6 -> TCGA cohort.
+* Column 7 -> CN-altered vs diploid tumors comparison type: amplified vs diploid or deleted vs diploid.
+* Column 8 -> % of samples CN-altered in queried gene.
+* Column 9 -> CN-altered TCGA sample barcodes in queried gene.
+* Column 10 -> COSMIC CGC gene approved symbol.
+* Column 11:14 -> COSMIC CGC gene copy number altered vs diploid tumor samples differential expression results.
+* Column 15 -> TCGA cohort.
+* Column 16 -> CN-altered vs diploid tumors comparison type: amplified vs diploid or deleted vs diploid.
+* Column 17 -> % of samples CN-altered in COSMIC CGC gene.
+* Column 18 -> CN-altered TCGA sample barcodes in COSMIC CGC gene.
+* Column 19 -> % of queried gene CN-altered samples that overlaps with COSMIC CGC gene CN-altered samples.
+* Column 20 -> % of COSMIC CGC gene CN-altered samples that overlaps with queried gene CN-altered samples.
