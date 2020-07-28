@@ -2,12 +2,9 @@
 #'
 #' @docType data
 #'
-#' @usage data(my_data)
+#' @usage data(ciberAMP)
 #'
 #' @format An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
 #'
 #' @keywords datasets
-#'
-#'
-#' @examples
-#' data(my_data)
+"ciberAMP"
