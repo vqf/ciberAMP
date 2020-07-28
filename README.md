@@ -1,7 +1,7 @@
 
 ------------------------------------------------------------------------
 
-# CiberAMP | For copy number alteration-driven mRNA differential expression in TCGA tumors.
+# CiberAMP | To discover copy number alteration-driven mRNA differential expression in TCGA tumors.
 
 CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from TCGA cohorts. It consists in two differential expression analysis (DEA): 1) mRNA differetial abundance between tumor and normal samples (if available) and 2) mRNA differential expression between copy number-altered and diploid tumor samples. First, samples are classified as tumors or normal and, secondly, tumor samples are classified as deeply/shallowly amplified/deleted based on GISTIC2.0 run on TCGA cohorts.
 
