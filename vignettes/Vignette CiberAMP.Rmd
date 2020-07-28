@@ -7,9 +7,9 @@ package: ciberAMP
 output:
   BiocStyle::html_document
 abstract: |
-    CiberAMP is a new R package to integrate somatic copy number and mRNA expression data from TCGA cohorts. It uses a new approach instead the Pearson correlation-based          previously used, that consists in two differential expression analysis (DEA): first, it calculates mRNA alterations between tumor and normal samples and, secondly, it         performs another DEA between copy number-altered and diploid tumor ones.\n
-    To do so, CiberAMP takes advantage of GISTIC2.0 samples classification as diploid (0), shallowly amplified/deleted (+1/-1) or deeply amplified/deleted (+2/-2).\n
-    Furthermore, this method also calculates how many well-knwon cancer-related genes may be co-amplified/deleted in the very same samples as our gene of interest.
+    CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from TCGA cohorts. It consists in two differential expression analysis (DEA): 1) mRNA     differetial abundance between tumor and normal samples (if available) and 2) mRNA differential expression between copy number-altered and diploid tumor samples. First,        samples are classified as tumors or normal and, secondly, tumor samples are classified as deeply/shallowly amplified/deleted based on GISTIC2.0 run on TCGA cohorts.
+
+    Finally, since highly copy number-altered oncodrivers can originate others genes alterations, CiberAMP calculated the % of SCN-altered samples between your genes and the      COSMIC Cancer Gene Census (CGC) list. This returns two values: 1) your gene over COSMIC gene and 2) COSMIC gene over your gene.
 
 vignette: |
   %\VignetteIndexEntry{CiberAMP}
@@ -34,17 +34,18 @@ All these packages are used for TCGA data downloading and managing (normalizatio
 
 # Gene query
 
-Once all packages are available, it is time to decide our genes of interest list. Many of you actually have a particular family of proteins or signaling pathway to consult. In that case, you should create a character vector with all the available and approved symbols for your queried genes, as in the example:
+Now it is time to define your queried-genes list. Whatever they will be, you must create a genes approved symbols (HGNC app. symbol) vector in R to be passed to *genes* CiberAMP argument, like this one:
+
 ```{r, echo=TRUE}
 genes.of.interest <- c("GENEA", "GENEB", "GENEC")
 ```
-This vector will be passed to CiberAMP function at its "genes" argument.
-In this example, we are going around a little bit more. In this paper, authors point out similaritis in 3p, 5p and 8p amplifications and 3q and 8q deletions in two squamous tumors cohorts from lung (LUSC) and head-and-nech (HNSC).
-We are wonder if any of the genes lodged at these chromosomal arms would be significantly altered in its transcription due to such copy number alterations. Furthermore, we will connect these alterations to patients survival in order to reach out potential biomarkers with prognostic value in both cohorts.
+
+Since this is not our case, we will create a queried-genes list based on the SCNAs similarities between TCGA-HNSC and TCGA-LUSC tumors at chromosomal positions 3p, 5p and 8p (amplifications) and 3q and 8q (deletions).
+We wonder how many genes lodged at those locations show a copy number-driven differential expression in both cohorts, and if they would be relevant prognostic markers using patients overall survival.
 
 # Getting genes from specific chromosomal locations
 
-So, the first step was to create a data frame containing all the genes lodged at chromosome 3, 8 and chromosomal arm 5p. Actually, in this examples we are going to focus only on protein-coding genes, removing all the other type from the analysis.
+So, the first step was to create a data frame containing all the genes lodged at chromosome 3, 8 and chromosomal arm 5p. Since we are looking mRNA differential expression, we will be focused on protein-coding genes exclusively:
 
 ```{r, echo=TRUE, width = 160, render=F}
 library(biomaRt)
@@ -53,7 +54,7 @@ library(GenomicRanges)
 ```
 ```{r, echo=TRUE, width = 160}
 
-# First, we get all the genes inside 3p, 3q, 5p, 8p and 8q chromosomal arms.
+# First, we get all the genes at 3p, 3q, 5p, 8p and 8q chromosomal arms using biomaRt R package. For every gene, we will get where it is located, its ensembl/hngc symbols and biotype (i.e. protein coding).
 
 ensembl <- useMart("ensembl")
 ensembl <- useDataset("hsapiens_gene_ensembl",mart=ensembl)
@@ -83,8 +84,10 @@ reg.genes <- reg.genes[reg.genes$hgnc_symbol != "", ]
 head(reg.genes)
 nrow(reg.genes)
 ```
-As you can see, in reg.genes data frame are contained all the 1870 genes found in ENSEMBL mapped to the queried positions. We have information about where do they start, end, at which chromosome and strand. This data is crucial to easy map them into a chromose plot using `r Biocpkg("chromPlot")`.
-Before that, `r Biocpkg("chromPlot")` requires a Genomics Range object as input. We can easily create one from reg.genes df just by using makeGRangesFromDataFrame function from `r Biocpkg("GenomicRanges")`:
+
+*reg.genes* data frame contains 1870 genes mapped into the queried positions. We have all the necessary information to be plotted using `r Biocpkg("chromPlot")` package.
+Nevertheless, before that, `r Biocpkg("chromPlot")` requires a Genomics Range object as an input. We can easily create it using makeGRangesFromDataFrame function from `r Biocpkg("GenomicRanges")` from *reg.genes* df:
+
 ```{r, echo=TRUE}
 library(GenomicRanges)
 gr <- makeGRangesFromDataFrame(reg.genes, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"), keep.extra.columns = TRUE, ignore.strand = FALSE)
