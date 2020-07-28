@@ -18,7 +18,7 @@ install.packages("devtools")
 devtools::install_github("r-lib/devtools")
 
 # Install ciberAMP by devtools
-devtools::install_github("ciberAMP", dependencies = TRUE)
+devtools::install_github("vqf/ciberAMP", dependencies = TRUE)
 ```
 
 ------------------------------------------------------------------------
