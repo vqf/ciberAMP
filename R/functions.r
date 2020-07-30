@@ -117,7 +117,7 @@ realTP <- NULL
 }
 
 # This function filters lower expressed genes and normalizes it by "EDASeq::withinLaneNormalization" and "EDASeq::betweenLaneNormalization" functions (both built in TCGAbiolinks::TCGAanalyze_Normalization R package function)
-.filterExpression <- function(tumor, sign, object, cor.cut, norm.method, filt.method,
+.filterExpression <- function(tumor, sign, object, pp.cor.cut, norm.method, filt.method,
                               filt.qnt.cut, filt.var.func, filt.var.cutoff, filt.eta,
                               filt.FC){
 
