@@ -229,7 +229,7 @@ ciberAMP <- function(genes = c(),
 
   }
 
-  if(nrow(EXPintCNA.results) > 0 && genes %in% EXPintCNA.results$Gene_Symbol){
+  if(nrow(EXPintCNA.results) > 0 && length(intersect(EXPintCNA.results$Gene_Symbol, genes)) > 0){
     write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], "CiberAMP EXPintCNA results.txt", sep="\t", quote=FALSE)
     write.table(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], "CiberAMP EXPintCNA COSMIC genes results.txt", sep="\t", quote=FALSE)
     write.table(COSMIC.ov.result, "CiberAMP COSMIC overlap results.txt", sep="\t", quote=FALSE)
