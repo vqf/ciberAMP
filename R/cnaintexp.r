@@ -1,5 +1,3 @@
-
-
 #' Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
 #'
 #' @param genes List of official gene symbols for analysis. See function \code{all_genes} for a list of available genes.
