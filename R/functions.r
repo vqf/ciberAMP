@@ -121,7 +121,7 @@ realTP <- NULL
                               filt.qnt.cut, filt.var.func, filt.var.cutoff, filt.eta,
                               filt.FC){
 
-  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = object, cor.cut = cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
+  dataPrep <- TCGAbiolinks::TCGAanalyze_Preprocessing(object = object, cor.cut = pp.cor.cut, filename = paste(tumor, "_AAIC_expression.png", sep=""))
 
   dataNorm <- TCGAbiolinks::TCGAanalyze_Normalization(tabDF = dataPrep,
                                                       geneInfo = TCGAbiolinks::geneInfo,
