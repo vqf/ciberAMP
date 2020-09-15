@@ -7,9 +7,9 @@ package: ciberAMP
 output:
   BiocStyle::html_document
 abstract: |
-    CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from TCGA cohorts. It consists in two differential expression analysis (DEA): 1) mRNA     differetial abundance between tumor and normal samples (if available) and 2) mRNA differential expression between copy number-altered and diploid tumor samples. First,        samples are classified as tumors or normal and, secondly, tumor samples are classified as deeply/shallowly amplified/deleted based on GISTIC2.0 run on TCGA cohorts.
+   CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from the TCGA cohorts. It consists in two differential expression analysis (DEA): 1) between tumor vs. normal samples (if available) and 2) SCN-altered and diploid tumor samples. Tumor samples are classified as deeply/shallowly amplified/deleted or diploid based on GISTIC2.0 thresholded-by-gene file.
 
-    Finally, since highly copy number-altered oncodrivers can originate others genes alterations, CiberAMP calculated the % of SCN-altered samples between your genes and the      COSMIC Cancer Gene Census (CGC) list. This returns two values: 1) your gene over COSMIC gene and 2) COSMIC gene over your gene.
+    Finally, CiberAMP calculates the % of SCN-altered samples between your queried genes and the COSMIC Cancer Gene Census (CGC) list of known oncodrivers.
 
 vignette: |
   %\VignetteIndexEntry{CiberAMP}
@@ -20,32 +20,29 @@ runtime: shiny
 
 # Let's start!
 
-The first step is to make sure you have installed all CiberAMP dependency packages:
+These are the packages CiberAMP depends on. They should be installed during the github CiberAMP installation:
 
-* `r Biocpkg("TCGAbiolinks")`, for TCGA data downloading, normalizations and differential expression analysis (DEA).
-* `r Biocpkg("SummarizedExperiment")`, for RNAseq counts matrices managing.
-* `r Biocpkg("EDASeq")`, for RNAseq count data filtering and normalization.
-* `r Biocpkg("edgeR")`, for mRNA differential expression analysis (DEA).
-* `r Biocpkg("RTCGAToolbox")`, for TCGA cohorts last GISTIC2.0 Broad's Institute run thresholded data download.
-* `r Biocpkg("dplyr")` & `r Biocpkg("stringr")`, for sample ID, and other strings, managing during the process.
-* `r Biocpkg("ggplot2")` & `r Biocpkg("plotly")` & `r Biocpkg("shiny")`, for static (ggplot2) or interactive (plotly, shiny) result data plotting.
-
-All these packages are used for TCGA data downloading and managing (normalization, differential expression analysis, copy number samples classification, etc...)
+* `r Biocpkg("TCGAbiolinks")`, for TCGA data downloading, filtering, normalization and differential expression analysis (DEA).
+* `r Biocpkg("SummarizedExperiment")`, to manage RNAseq experiments data.
+* `r Biocpkg("EDASeq")`, to normalize RNAseq counts.
+* `r Biocpkg("edgeR")`, to perform differential expression analysis (DEA) between two groups of samples.
+* `r Biocpkg("RTCGAToolbox")`, to download latest GISTIC2.0 tun thresholded-by-file data from Broad's Firehouse data server.
+* `r Biocpkg("dplyr")` & `r Biocpkg("stringr")`, to manage strings in R.
+* `r Biocpkg("ggplot2")` & `r Biocpkg("plotly")` & `r Biocpkg("shiny")`, to plot static (ggplot2) and interactive (plotly) graphs with the results.
 
 # Gene query
 
-Now it is time to define your queried-genes list. Whatever they will be, you must create a genes approved symbols (HGNC app. symbol) vector in R to be passed to *genes* CiberAMP argument, like this one:
+Now, it is time to define your queried-genes list. Whatever they will be, you must create a genes approved symbols vector, like this:
 
 ```{r, echo=TRUE}
-genes.of.interest <- c("GENEA", "GENEB", "GENEC")
+genes.of.interest <- c("GENEA", "GENEB", "GENEC", ...)
 ```
 
-Since this is not our case, we will create a queried-genes list based on the SCNAs similarities between TCGA-HNSC and TCGA-LUSC tumors at chromosomal positions 3p, 5p and 8p (amplifications) and 3q and 8q (deletions).
-We wonder how many genes lodged at those locations show a copy number-driven differential expression in both cohorts, and if they would be relevant prognostic markers using patients overall survival.
+In this mock case, we will study if recurrent chromosomal alterations in TCGA-HNSC and TCGA-LUSC cohorts contain SCN-driven DEGs. These cohorts share SCNAs at chromosomal positions 3p, 5p and 8p (amplifications) and 3q and 8q (deletions). 
 
 # Getting genes from specific chromosomal locations
 
-So, the first step was to create a data frame containing all the genes lodged at chromosome 3, 8 and chromosomal arm 5p. Since we are looking mRNA differential expression, we will be focused on protein-coding genes exclusively:
+So, first step is to reach out every gene lodged at chromosomes 3 and 8, and at chromosomal arm 5p. CiberAMP is focused in protein-coding genes only:
 
 ```{r, echo=TRUE, width = 160, render=F}
 library(biomaRt)
@@ -54,12 +51,10 @@ library(GenomicRanges)
 ```
 ```{r, echo=TRUE, width = 160}
 
-# First, we get all the genes at 3p, 3q, 5p, 8p and 8q chromosomal arms using biomaRt R package. For every gene, we will get where it is located, its ensembl/hngc symbols and biotype (i.e. protein coding).
-
+# First, we get all the genes at 3p, 3q, 5p, 8p and 8q chromosomal arms using biomaRt R package. For every gene, we will get its location, ensembl/hngc symbols and biotype (i.e. protein coding).
 ensembl <- useMart("ensembl")
 ensembl <- useDataset("hsapiens_gene_ensembl",mart=ensembl)
-all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'ensembl_gene_id', 'hgnc_symbol', 'ensembl_transcript_id', 'gene_biotype', 'transcript_biotype'),
-                   mart=ensembl)
+all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'ensembl_gene_id', 'hgnc_symbol', 'ensembl_transcript_id', 'gene_biotype', 'transcript_biotype'), mart=ensembl)
 head(all.genes)
 all.genes$Chromosome.location <- paste0(all.genes$chromosome_name, all.genes$band)
 all.genes <- all.genes[all.genes$gene_biotype %in% "protein_coding", ]
@@ -85,14 +80,15 @@ head(reg.genes)
 nrow(reg.genes)
 ```
 
-*reg.genes* data frame contains 1870 genes mapped into the queried positions. We have all the necessary information to be plotted using `r Biocpkg("chromPlot")` package.
-Nevertheless, before that, `r Biocpkg("chromPlot")` requires a Genomics Range object as an input. We can easily create it using makeGRangesFromDataFrame function from `r Biocpkg("GenomicRanges")` from *reg.genes* df:
+*reg.genes* data frame contains 1870 genes mapped at the queried positions. Now, we will create a a Genomics Range object to plot all these genes at their locations using the `r Biocpkg("chromPlot")`. We can do it easily using makeGRangesFromDataFrame function (`r Biocpkg("GenomicRanges")`):
 
 ```{r, echo=TRUE}
 library(GenomicRanges)
 gr <- makeGRangesFromDataFrame(reg.genes, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"), keep.extra.columns = TRUE, ignore.strand = FALSE)
 gr
 ```
+
+Now, we can plot it in the human kariotype:
 
 ```{r all_in_genes, fig.cap="Queried genes. This plot shows these 1870 protein-coding genes chromosomal locations and density", fig.wide=TRUE, echo=TRUE}
 library(chromPlot)
@@ -102,28 +98,31 @@ chromPlot(gaps=hg_gap, annot1 = gr, chr = c(3,5,8))
 
 # Running CiberAMP
 
-CiberAMP will not use this mapping data. It is only necessary if we want to visualize our genes into the chromosomes as indicated in this example. We can skeep those steps if all we want is just running CiberAMP. This is the easiest thing ever: you only have to provide:
+It is the easiest thing ever. You only should provide:
 
-* A genes of interest character vector
-* Those cohorts to be analyzed.
-* The minimum % of copy number altered samples to be analyzed
-* A path to a folder where results are going to be saved
+* A genes-of-interest character vector.
+* TCGA cohorts ID to be analyzed.
+* The minimum % of SCN-altered tumor samples to be analyzed.
+* A directory path the results will be saved at.
 
 ```{r, echo=TRUE, results="hide"}
 library(ciberAMP)
 #x <- ciberAMP(genes = reg.genes$hgnc_symbol, cohorts = c("LUSC", "HNSC"), pat.percentage = 0, writePath = "PATH_TO_FOLDER")
 ```
-This is a computing expensive step, so we already provide you the results for the previous line. You can extract them easily.
+
+Since this is a computing expensive step, we provide the results along with CiberAMP package. You can extract them easily.
+
 ```{r, echo=TRUE, results="hide"}
 library(ciberAMP)
 x <- ciberAMP:::my_data
 ```
-In any case, if you have time to run it by yourself, we leave you here a description of all CiberAMP arguments for you notice:
 
-* genes Your genes of interest official symbols. This should be a character vector.
-* cohorts By default, CiberAMP will compute every TCGA cohort (the 32 available), but you can use this argument to only analyze a few. You can consult the offical codes at TCGA's web -> https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
-* writePath The folder path to save the results. TIP: if you want to re-run CiberAMP, if you use the same folder where all data was stored, you will never need to re-download it again what saves a lot of time and disk space! But, be careful, every run your results will be overwritten!
-* pat.percentage The minimum % of altered patients that should be considered to look for SCNA-driven differential expression. When in a cohort an event occurs recurrently it is more likely that such event may be under positive selection so being relevant for tumor fitness.
+In the case you have enough time to run it by yourself, you can find here a description of every CiberAMP's argument:
+
+* genes Vector of approved queried genes symbols to be analyzed.
+* cohorts Vector of TCGA cohorts IDs. See function \code{all_tumors} for a list of available tumors. If it is left empty, CiberAMP will run on every cohort. You can consult the offical IDs at TCGA's web -> https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
+* writePath Path where results are stored. Defaults to the current folder. TIP: if you want to re-run CiberAMP, if you use the same folder where all data was stored, you will never need to re-download it again what saves a lot of time and disk space! But, be careful, every run your results will be overwritten!
+* pat.percentage Minimum percentage of patients per group.
 * pp.cor.cut Threshold to filter samples by AICC. Passed to `TCGAanalyze_Preprocessing`.
 * norm.method Method of normalization, such as `gcContent` or `geneLength` (default).
 * filt.method Method of filtering, such as `quantile` (default), `varFilter`, `filter1`, `filter2`.
@@ -131,12 +130,11 @@ In any case, if you have time to run it by yourself, we leave you here a descrip
 * filt.var.func Filtering function. Defaults to `IQR`. See `genefilter` documentation for available methods.
 * filt.var.cutoff Threshold for `filt.var.funct`.
 * filt.eta Parameter for `filter1`. Defaults to 0.05.
-* filt.FDR.DEA Threshold to filter differentially expressed genes according their corrected p-value.
-* filt.FC Parameter for `filter2`. Defaults to 1.
-* p.val.thr Threshold for reported p values. Defaults to 1 (report all).
+* filt.FDR.DEA Threshold to filter differentially expressed genes according their adjusted p-value.
+* filt.FC Minimum log2(FC) value to considered a gene as differentially expressed. Defaults to 1.
 * cna.thr Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`
-* exp.mat Custom expression matrix, which will not be filtered. Defaults to `NULL`,
-* cna.mat Custom copy-number analysis matrix, which will not be filtered. Defaults to `NULL`,
+* exp.mat Custom normalized RNAseq counts expression matrix of only tumors. Defaults to `NULL`.
+* cna.mat Custom copy-number analysis matrix of only tumors. Defaults to `NULL`.
 
 # Looking into CiberAMP results
 
@@ -146,54 +144,55 @@ The x[[1]] data frame contains differential expression results for queried genes
 
 * Column 1 -> queried gene approved symbol.
 * Columns 2:4 -> queried genes tumor vs normal differential expression results.
-* Column 5 -> TCGA cohort.
-* Column 6:9 -> queried gene copy number altered vs diploid tumor samples differential expression results.
-* Column 10  -> TCGA cohort.
-* Column 11  -> CN-altered vs diploid tumors comparison type: amplified vs diploid or deleted vs diploid.
-* Column 12  -> % of samples CN-altered.
-* Column 14 -> CN-altered TCGA sample barcodes.
+* Column 5 -> TCGA cohort ID.
+* Column 6:9 -> queried gene SCN-altered vs. diploid tumor samples differential expression results.
+* Column 10 -> TCGA cohort.
+* Column 11 -> SCN-altered vs. diploid tumor samples comparison: amplified vs. diploid or deleted vs. diploid.
+* Column 12 -> % of samples SCN-altered.
+* Column 14 -> SCN-altered TCGA sample barcodes.
 
 ```{r queried genes results data frame, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
+#To get the first queried gene (first row) results.
 head(x[[1]][1, ])
 ```
 
-The x[[2]] data frame contains differential expression results for COSMIC cancer census genes list. Column information is exactly the same as x[[1]].
+The x[[2]] data frame containing CGC list differential expression results. Columns are the same as x[[1]].
 
 ```{r COSMIC CGC genes results data frame, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 head(x[[2]][1, ])
 ```
 
-Finally, the x[[3]] contains overlapping information between queried and CGC genes copy number overlap between samples. Genes may be CN-altered due to being lodged next to well-known and transcriptionally active in cancer cancer-related genes. In this data frame, you can consult if any of your queried CN-alterations would be highly correlated to any of known oncodrivers or tumor suppressors:
+Finally, the x[[3]] data frame containing the % of tumor samples in which queried gene's SCN-driven differential expression co-occurs with any CGC oncodrivers' SCNAs:
 
 * Column 1 -> queried gene approved symbol.
-* Column 2:5 -> queried gene copy number altered vs diploid tumor samples differential expression results.
-* Column 6 -> TCGA cohort.
-* Column 7 -> CN-altered vs diploid tumors comparison type: amplified vs diploid or deleted vs diploid.
-* Column 8 -> % of samples CN-altered in queried gene.
-* Column 9 -> CN-altered TCGA sample barcodes in queried gene.
-* Column 10 -> COSMIC CGC gene approved symbol.
-* Column 11:14 -> COSMIC CGC gene copy number altered vs diploid tumor samples differential expression results.
-* Column 15 -> TCGA cohort.
-* Column 16 -> CN-altered vs diploid tumors comparison type: amplified vs diploid or deleted vs diploid.
-* Column 17 -> % of samples CN-altered in COSMIC CGC gene.
-* Column 18 -> CN-altered TCGA sample barcodes in COSMIC CGC gene.
-* Column 19 -> % of queried gene CN-altered samples that overlaps with COSMIC CGC gene CN-altered samples.
-* Column 20 -> % of COSMIC CGC gene CN-altered samples that overlaps with queried gene CN-altered samples.
+* Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
+* Column 6 -> TCGA cohort ID.
+* Column 7 -> SCN-altered vs. diploid tumor samples comparison type: amplified vs. diploid or deleted vs. diploid.
+* Column 8 -> % of tumor SCN-altered samples for a queried gene.
+* Column 9 -> queried gene SCN-altered TCGA tumor samples' barcodes.
+* Column 10 -> COSMIC CGC gene approved symbol..
+* Column 11:14 -> COSMIC CGC gene copy number altered vs. diploid tumor samples DE results.
+* Column 15 -> TCGA cohort ID.
+* Column 16 -> SCN-altered vs. diploid tumor samples comparison type: amplified vs diploid or deleted vs diploid.
+* Column 17 -> % of tumor SCN-altered samples for a COSMIC CGC gene.
+* Column 18 -> COSMIC CGC gene SCN-altered TCGA tumor samples' barcodes.
+* Column 19 -> % of overlapping queried and COSMIC CGC genes SCN-altered tumor samples.
+* Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
 
 ```{r Overlap between query and COSMIC CGC genes CN-altered samples, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 head(x[[3]][1, ])
 ```
 
-
 # Mapping results into chromosomes
 
 From the original 1870 genes we found that:
 
-* 114 CN-altered queried genes show significant CN-driven differential expression in TCGA-HNSC cohort.
-* 201 CN-altered queried genes show significant CN-driven differential expression in TCGA-LUSC cohort.
+* 114 SCN-altered queried genes show significant SCN-driven differential expression in TCGA-HNSC cohort.
+* 201 SCN-altered queried genes show significant SCN-driven differential expression in TCGA-LUSC cohort.
 * Only 67 of them were found in both cohorts.
 
-These are mapped in the next figure at their chromosomal positions:
+They are mapped at their chromosomal positions:
+
 ```{r only_assoc_both_genes, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 library(chromPlot)
 df <- x[[1]]
@@ -204,7 +203,7 @@ both <- intersect(gr.assoc.hnsc$hgnc_symbol, gr.assoc.lusc$hgnc_symbol)
 chromPlot(gaps=hg_gap, annot1 = gr[gr$hgnc_symbol %in% both, ], chr = c(3,5,8))
 ```
 
-The next question was: are these genes mapping very next to known COSMIC CGC ones? For that reason, we decided to graphically show it doing:
+To answer if these genes are very close to any SCN-altered CGC in the cohort, we visually plot them (red bars) and the CGC co-occurring ones (yellow bars):
 
 ```{r genes_and_cosmic, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 library(chromPlot)
@@ -215,27 +214,27 @@ both.cosmic <- intersect(gr.assoc.hnsc.cosmic$hgnc_symbol, gr.assoc.lusc.cosmic$
 chromPlot(gaps=hg_gap, annot1 = gr[gr$hgnc_symbol %in% both, ], annot2 = gr[gr$hgnc_symbol %in% both.cosmic, ], chr = c(3,5,8), chrSide=c(-1,1,1,1,1,1,1,1))
 ```
 
-In this figure, rigth red bars show those 67 CN-driven diff. expressed queried genes and left yellow bars show 8 CN-driven differentially expressed COSMIC CGC genes at their genomic positions.
-
 # Ggplotting the results
 
-CiberAMP package actually gives you a ggplot function to plot your results. This graph cosists in: 1) a X axis representing log2(FC) values for each genes comparing tumor and normal samples mRNA differential expression, and 2) a Y axis representing log2(FC) values for each gene comparing copy number altered vs diploid tumor samples mRNA differential expression.
-This plot will allow you to find out which or your genes are:
+CiberAMP package provides a ggplot-based function to create a scatter plot where:
 
-* Differentially expressed in tumor samples
-* Differentially expressed in copy number altered samples.
+* Log2(FC) mRNA differential expression between tumor vs. normal samples values are plotter in the X axis.
+* Log2(FC) mRNA differential expression between SCN-altered vs. diploid tumor samples values are plotter in the Y axis.
+* Amplified genes are plotted as triangles and deleted as circles.
+* Dot size is directly proportional to the % of samples that gene is SCN-altered at.
+* Dot color represents each TCGA analyzed cohort.
 
-And how these two data are connected:
+In the end, a significantly altered gene can be classified in 8 scenarios:
 
-* Upregulated genes which overexpression bursts due to copy number alteration -> x-value > 0; y-value > 0
-* Upregualted genes exclusively when there is a copy alteration -> x-value = 0; y-value > 0
-* Downregulated genes which copy number alteration increases very significantly its expression -> x-value < 0; y-value > 0
-* Upregulated genes wich copy number alterations does not lead significant transcriptional alteration -> x-value != 0; y-value == 0
-* Downregulated genes in tumors which copy number alteration even intensifies its repression -> x-value < 0; y-value < 0
-* Downregulated genes exclusively repressed by copy number alteration -> x-value = 0, y-value < 0
-* Upregualted genes which copy number alteration significantly represses its expression -> x-value > 0; y-value < 0
+* x-value < 0; y-value > 0 | Downregulated in tumor vs. normal samples, with a very high expression in SCN-altered tumor samples.
+* x-value = 0; y-value > 0 | Upregualted exclusively in SCN-altered tumor samples.
+* x-value > 0; y-value > 0 | Upregulated in tumor vs. normal samples with an even higher expression in SCN-altered tumor samples.
+* x-value != 0; y-value == 0 | Deregulated (up or down) in tumor vs. normal samples without any SCN-driven deregulation.
+* x-value < 0; y-value < 0 | Downregulated in tumor vs. normal samples, even more repressed in SCN-altered tumor samples.
+* x-value = 0, y-value < 0 | Downregulated exclusively in SCN-altered tumor samples.
+* x-value > 0; y-value < 0 | Upregualted in tumor vs. normal samples, but repressed in SCN-altered tumor samples.
 
-Here it is those 67 common CN-driven diff. expressed genes:
+Let's take a look on those 67 resulting genes:
 
 ```{r ggplot, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 library(ggplot2)
@@ -246,17 +245,17 @@ ggplot.CiberAMP(df.exp)
 
 # Interacting with the results
 
-Finally, CiberAMP provides a function to interactively explore your results. This is an application that can be used to filter queried genes by:
+Finally, CiberAMP provides a function to interactively explore your results. In this app, you can filter genes by:
 
 * Gene symbol
 * Minimum % of CN-altered samples
-* log2(FC) threshold for tumor vs normal samples differential expression
-* log2(FC) threshold for CN-altered vs diploid tumor samples differential expression.
-* TCGA cohorts to be displayed (directly on graph's legend).
+* Log2(FC) threshold for mRNA differential expression between tumor vs. normal samples outcomes.
+* Log2(FC) mRNA differential expression between SCN-altered vs. diploid tumor samples outcomes.
+* TCGA cohorts IDs.
 
-Actually, clicking on any point would display a table to show the overlapping samples % between queried and COSMIC CGC genes.
+Clicking on any dot will display a table with the overlapping % of samples in which a SCN-deregulated queried genes co-occurs with any CGC oncodrivers' SCNAs.
 
-Tip: Click on submit button!!
+Tip: Click on the 'submit' button to initialize the graph!! If 'ALL' is written in the box, then every SCN-altered queried gene from your results will be plotted.
 
 ```{r interactive.plot, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
 library(shiny)

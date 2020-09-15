@@ -1,8 +1,7 @@
 #' Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
 #'
-#' @param genes List of official gene symbols for analysis. See function \code{all_genes} for a list of available genes.
-#' @param cohorts List of tumors to study. See function \code{all_tumors} for a list of available tumors.
-#' Defaults to all tumors with either an empty list or a list containing `ALL`.
+#' @param genes Vector of approved queried genes symbols to be analyzed.
+#' @param cohorts Vector of TCGA cohorts IDs. See function \code{all_tumors} for a list of available tumors. If is left empty, CiberAMP will run on every cohort.
 #' @param writePath Path where results are stored. Defaults to the current folder.
 #' @param pat.percentage Minimum percentage of patients per group.
 #' @param pp.cor.cut Threshold to filter samples by AICC. Passed to `TCGAanalyze_Preprocessing`.
@@ -13,7 +12,7 @@
 #' @param filt.var.func Filtering function. Defaults to `IQR`. See `genefilter` documentation for available methods.
 #' @param filt.var.cutoff Threshold for `filt.var.funct`.
 #' @param filt.eta Parameter for `filter1`. Defaults to 0.05.
-#' @param filt.FDR.DEA Threshold to filter differentially expressed genes according their corrected p-value.
+#' @param filt.FDR.DEA Threshold to filter differentially expressed genes according their adjusted p-value.
 #' Passed to `TCGAanalyze_DEA`.
 #' @param filt.FC Minimum log2(FC) value to considered a gene as differentially expressed. Defaults to 1.
 #' @param cna.thr Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`.
