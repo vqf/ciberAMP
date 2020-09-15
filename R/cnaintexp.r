@@ -15,20 +15,17 @@
 #' @param filt.eta Parameter for `filter1`. Defaults to 0.05.
 #' @param filt.FDR.DEA Threshold to filter differentially expressed genes according their corrected p-value.
 #' Passed to `TCGAanalyze_DEA`.
-#' @param filt.FC Parameter for `filter2`. Defaults to 1.
-#' @param p.val.thr Threshold for reported p values. Defaults to 1 (report all).
+#' @param filt.FC Minimum log2(FC) value to considered a gene as differentially expressed. Defaults to 1.
 #' @param cna.thr Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`.
-#' `Deep`, consider likely homozygous deletions for loss and high-level amplifications (high copy-number, focal) for gain.
-#' `Shallow`, consider likely heterozygous deletions for loss and low-level amplifications (lower copy-number, broad) for gain.
-#' `Both`, consider all loss and gain events.
-#' @param exp.mat Custom expression matrix, which will not be filtered. Defaults to `NULL`,
-#' which means that the method considers TCGA expression matrices belonging to `cohorts`.
-#' @param cna.mat Custom copy-number analysis matrix, which will not be filtered. Defaults to `NULL`,
-#' which means that the method considers TCGA copy-number analysis matrices belonging to `cohorts`.
+#' `Deep`, to consider homozygous deletions and high-level broad amplifications.
+#' `Shallow`, to consider hemyzygous deletions and low-level focal amplifications.
+#' `Both`, to consider deep and shallow amplifications/deletions in the same group: one group -> deep + shallow amp; second group -> deep + shallow del.
+#' @param exp.mat Custom normalized RNAseq counts expression matrix of only tumors. Defaults to `NULL`.
+#' @param cna.mat Custom copy-number analysis matrix of only tumors. Defaults to `NULL`.
 #'
 #' @return List containing three data frames:
 #' 1 - SCNA-mRNA correlations for queried genes
-#' 2 - SCNA-mRNA correlations for Cancer Census genes (COSMIC) | Known oncodriver/TS genes.
+#' 2 - SCNA-mRNA correlations for Cancer Census genes (COSMIC) | Known oncodriver/TSGs.
 #' 3 - SCNA overlapping between queried and CGC genes.
 #' @export
 #'
@@ -36,7 +33,7 @@
 ciberAMP <- function(genes = c(),
                       cohorts = c(),
                       writePath = NULL,
-                      pat.percentage = 10,
+                      pat.percentage = 0,
                       pp.cor.cut = 0.6,
                       norm.method = "geneLength",
                       filt.method = "quantile",
@@ -46,7 +43,6 @@ ciberAMP <- function(genes = c(),
                       filt.eta = 0.05,
                       filt.FDR.DEA = 0.01,
                       filt.FC = 1,
-                      p.val.thr = 1,
                       cna.thr = "Deep",
                       exp.mat = NULL,
                       cna.mat = NULL) {
@@ -237,7 +233,7 @@ ciberAMP <- function(genes = c(),
     end <- list(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], COSMIC.ov.result)
     return(end)
   }else{
-    print("Any found")
+    print(paste0("Any queried gene was found significantly SCN-driven DE with the input parameters: log2(FC) thr.:", filt.FC, " FDR DEA thr.:", filt.FDR.DEA, " SCNA thr.:", cna.thr))
   }
 }
 
