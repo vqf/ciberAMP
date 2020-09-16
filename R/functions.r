@@ -228,10 +228,10 @@ realTP <- NULL
 # This function sets the minimum number of patients to be analyzed
 .setMinPat <- function(new, pat.percentage) {
   min <- (nrow(new) * pat.percentage)/100
-  if(min >= 1) {
+  if(min >= 2) {
     return(min)
-  }else if(min < 1){
-    return(1)
+  }else if(min < 2){
+    return(2)
     }
    }
 
