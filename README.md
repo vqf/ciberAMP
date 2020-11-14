@@ -1,11 +1,27 @@
 
 ------------------------------------------------------------------------
 
-# CiberAMP | Strengthenning SCN-driven oncodriver discovery in TCGA tumors.
+# CiberAMP | An R package to integrate SCNVs and RNAseq data from TCGA.
 
-CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from the TCGA cohorts. It consists in two differential expression analysis (DEA): 1) between tumor vs. normal samples (if available) and 2) SCN-altered and diploid tumor samples. Tumor samples are classified as deeply/shallowly amplified/deleted or diploid based on GISTIC2.0 thresholded-by-gene file.
+CiberAMP is a new R package that takes advantage of the R-coded count-based differential expression analysis (DEA) pipelines to associate significant transcriptional alterations to SCNVs in a cohort of tumors. The algorithm has been specially designed to be an easy-to-access tool for TCGA database, the largest in the world, with more than 11.000 tumor samples distributed across 33 different cancer datasets.
 
-Finally, CiberAMP calculates the % of SCN-altered samples between your queried genes and the COSMIC Cancer Gene Census (CGC) list of known oncodrivers.
+Unlike other methods, CiberAMP provides information about:
+  1) the transcriptional alterations between I) tumor vs normal and ii) SCN-altered vs diploid tumor samples
+  2) the SCNVs recurrencies across the cohort
+  3) the genomic context these changes are embedded in
+  4) a rated list of top candidates based on a novel logic classification algorithm.
+
+The SCN-associated differentially expressed genes (DEGs) reported by CiberAMP are:
+  1º) classified regarding their co-amplification/deletion with any COSMIC CGC oncogene in the cohort
+  2º) subclassified according to their genomic location inside SCN-associated DEGs enriched clusters in the tumor genome.
+  
+The algorithm defines the best candidate as a gene:
+  1) with a potential autonomous effect (so not co-amplified/deleted with other cancer related genes)
+  2) not located inside enriched genomic clusters
+  3) highly recurrent across the patients
+  4) with the largest significant SCN-associated transcriptional deregulation.
+  
+Finally, since CiberAMP classifies tumor samples SCNVs based on GISTIC2.0 outcomes, it allows the users to integrate the expression data from deeply or shallowly SCN-altered samples.
 
 ### Installation from GitHub ###
 
@@ -56,9 +72,9 @@ Where:
 
 # Looking into CiberAMP results
 
-CiberAMP results into a list of 3 data frames that can be accessed by:
+CiberAMP returns a list of 3 data frames:
 
-The x[[1]] data frame containing queried genes differential expression results:
+The x[[1]] data frame contains user's queried genes with a SCN-associated transcriptional deregulation:
 
 * Column 1 -> queried gene approved symbol.
 * Columns 2:4 -> queried genes tumor vs normal differential expression results.
@@ -69,9 +85,9 @@ The x[[1]] data frame containing queried genes differential expression results:
 * Column 12  -> % of samples SCN-altered.
 * Column 14 -> SCN-altered TCGA sample barcodes.
 
-The x[[2]] data frame containing CGC list differential expression results. Columns are the same as x[[1]].
+The x[[2]] data frame contains COSMIC CGC oncogenes with a SCN-associated transcriptional deregulation. The columns are exactly the same as in the previous one.
 
-Finally, the x[[3]] data frame containing the % of tumor samples in which queried gene's SCN-driven differential expression co-occurs with any CGC oncodrivers' SCNAs:
+Finally, the x[[3]] data frame contains in each row a pair of genes which SCN-altered samples showed a similitude higher than 70% (co-amplified/deleted) with a knwon COSMIC CGC oncogene.
 
 * Column 1 -> queried gene approved symbol.
 * Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
@@ -88,4 +104,4 @@ Finally, the x[[3]] data frame containing the % of tumor samples in which querie
 * Column 19 -> % of overlapping queried and COSMIC CGC genes SCN-altered tumor samples.
 * Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
 
-where x is the variable designated to recall CiberAMP outcomes.
+In these examples, x is the variable designed to contain CiberAMP results.
