@@ -17,7 +17,6 @@ Imports:
     purrrogress,
     TCGAbiolinks,
     SummarizedExperiment,
-    dplyr,
     stringr,
     RTCGAToolbox,
     car,
