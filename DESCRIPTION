@@ -8,7 +8,12 @@ biocViews: SCNAs, RNAseq, copy number alteration, copy number and expression int
 License:
 Encoding: UTF-8
 LazyData: true
-Imports: 
+Imports:
+    biomaRt,
+    BSgenome.Hsapiens.UCSC.hg19,
+    GenomicRanges,
+    karyoploteR,
+    diffloop,
     purrrogress,
     TCGAbiolinks,
     SummarizedExperiment,
