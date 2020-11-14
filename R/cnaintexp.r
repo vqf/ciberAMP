@@ -236,6 +236,131 @@ ciberAMP <- function(genes = c(),
   }
 }
 
+#' Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
+#'
+#' @param ciberAMP.res A variable with CiberAMP results
+#' @param res1 The first resulting data frame from CiberAMP outcomes
+#' @param res3 The third resulting data frame from CiberAMP outcomes
+#' @param width.window Number of base pairs to be analyzed in order to define genomic clusters
+#'
+#' @return List containing four data frames:
+#' 1 - Top candidates: SCN-associated DEGs with no co-amplification/deletion with a known oncogene and OUTSIDE a genomic cluster
+#' 2 - Second best candidates: SCN-associated DEGs with no co-amplification/deletion with a known oncogene and INSIDE a genomic cluster
+#' 3 - Third best candidates: SCN-associated DEGs co-amplified/deleted with a known oncogene and OUTSIDE a genomic cluster. This may contain COSMIC CGC oncogenes.
+#' 4 - Fourth best candidates: SCN-associated DEGs co-amplified/deleted with a known oncogene and INSIDE a genomic cluster. This contains COSMIC CGC oncogenes.
+#' @export
+#'
+#' @examples
+CiberAMP.classifier <- function(ciberAMP.res = NULL, res1 = NULL, res3 = NULL, width.window = 1000000) {
+
+  list.of.packages <- c("biomaRt", "BSgenome.Hsapiens.UCSC.hg19", "GenomicRanges", "dplyr", "karyoploteR", "diffloop")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {BiocManager::install(new.packages)}
+
+  if(is.null(ciberAMP.res) && is.null(res1)) {
+    print("You must provide a CiberAMP list of resulting dataframes to this function; or data frames 1 (SCN-associated DEGs) and 3 (Overlapping report)")
+  }else if(!is.null(ciberAMP.res)) {
+    df1 <- ciberAMP.res[[1]]
+    df3 <- ciberamp.res[[3]]
+  }else{
+    df1 <- res1
+    df3 <- res3
+  }
+
+  df3 <- df3[df3$Gene_Symbol %in% df1$Gene_Symbol, ]
+  df3 <- df3[df3$Gene_Symbol_COSMIC %in% df1$Gene_Symbol, ]
+
+  tumors <- as.character(unique(df1$TCGA_Tumor))
+
+  for(i in 1:length(tumors)) {
+
+    d <- df1[df1$TCGA_Tumor %in% tumors[i], ]
+
+    over <- intersect(df1$Gene_Symbol, df3$Gene_Symbol)
+
+    c11 <- d[d$Gene_Symbol %in% over, ]
+    c11$Group <- "Group2"
+    c12 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, over), ]
+    c12$Group <- "Group1"
+    d <- rbind(c11, c12)
+
+    ensembl = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
+    all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = c('hgnc_symbol'), values = as.character(d$Gene_Symbol), mart=ensembl)
+    all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
+    all.genes <- all.genes[all.genes$chromosome_name %in% as.character(c(1:22, "X", "Y")), ]
+    d <- d[d$Gene_Symbol %in% all.genes$hgnc_symbol, ]
+    df3 <- df3[df3$Gene_Symbol %in% all.genes$hgnc_symbol, ]
+    data <- merge.data.frame(all.genes, d, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+    data$Chromosome.location <- paste0(data$chromosome_name, data$band)
+    for(r in 1:nrow(data)) {
+      if(data$strand[r] < 0) {
+        data$strand[r] <- "-"
+      }else{
+        data$strand[r] <- "+"
+      }
+    }
+    gr <- makeGRangesFromDataFrame(data, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"),  keep.extra.columns = TRUE, ignore.strand = FALSE)
+    gr <- addchr(gr)
+
+    gr.genome <- getGenomeAndMask(genome = "hg19", mask = NA)$genome
+    gr.genome <- filterChromosomes(gr.genome, organism = "hg19", chr.type = "canonical")
+    windows <- tileGenome(stats::setNames(stats::setNames(end(gr.genome), seqnames(gr.genome)), as.character(GenomeInfoDb::seqlevels(gr.genome))), tilewidth = width.window, cut.last.tile.in.chrom = TRUE)
+    dens <- countOverlaps(windows, gr)
+    print(paste(tumors[i], "mean elements per", width.window, "bases long cluster:", sep=" "))
+    print(mean(dens[dens>1]))
+    if(mean(dens[dens>1]) > 2) {
+      windows <- windows[which(dens > mean(dens[dens!=0])), ]
+    }else{
+      windows <- windows[which(dens > 2), ]
+    }
+
+    in.region <- subsetByOverlaps(gr, windows)
+    in.region <- as.character(in.region$hgnc_symbol)
+
+    for(j in 1:nrow(df3)) {
+      df3$Chr_1[j] <- as.character(all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$chromosome_name)
+      df3$Start_1[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$start_position
+      df3$End_1[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$end_position
+      df3$Chr_2[j] <- as.character(all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$chromosome_name)
+      df3$Start_2[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$start_position
+      df3$End_2[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$end_position
+    }
+
+    clust.genes <- unique(c(in.region))
+
+    c21 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group1", ]
+    c21$Group <- "Group1"
+    c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+    c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+    c22 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group1", ]
+    c22$Group <- "Group2"
+    c22 <- merge(all.genes, c22, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+    c22 <- arrange(c22, -Pat.percentage, FDR.SCNAvsDip)
+    c23 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group2", ]
+    c23$Group <- "Group3"
+    c23 <- merge(all.genes, c23, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+    c23 <- arrange(c23, -Pat.percentage, FDR.SCNAvsDip)
+    c24 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group2", ]
+    c24$Group <- "Group4"
+    c24 <- merge(all.genes, c24, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+    c24 <- arrange(c24, -Pat.percentage, FDR.SCNAvsDip)
+
+    if(i == 1) {
+      g1 <- c21
+      g2 <- c22
+      g3 <- c23
+      g4 <- c24
+    }else{
+      g1 <- rbind(g1, c21)
+      g2 <- rbind(g2, c22)
+      g3 <- rbind(g3, c23)
+      g4 <- rbind(g4, c24)
+    }
+  }
+  res <- list(g1, g2, g3, g4)
+  return(res)
+}
+
 #' Get available genes
 #'
 #' @return List of available genes
