@@ -345,7 +345,7 @@ realTP <- NULL
 
     for(i in 1:nrow(s)) {
       if(is.na(s$Condition[i])) {
-        s$Condition[i] <- paste("Not SCN-altered in more than", pat.percentage, "% of the samples", sep=" ")
+        s$Condition[i] <- c("Not SCN-associated DEG")
       }
     }
 
