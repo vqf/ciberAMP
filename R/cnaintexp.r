@@ -172,6 +172,12 @@ ciberAMP <- function(genes = c(),
 
         dataDEGs.SCNA <- .getDataDEGs_SCNA(tumor, dataFilt, group.x, group.y, filt.FDR.DEA, filt.FC, gene)
 
+      }
+
+      if(isTRUE(nrow(group.del) < minimum.patients & nrow(group.amp) < minimum.patients)) {
+
+        next
+
       }else if(isTRUE(nrow(group.amp) >= minimum.patients) & isTRUE(nrow(group.neutro) >= minimum.patients)) {
 
         group.x <- group.amp
@@ -267,6 +273,7 @@ CiberAMP.classifier <- function(ciberAMP.res = NULL, res1 = NULL, res3 = NULL, w
     df3 <- res3
   }
 
+  df1 <- df1[df1$log2FC.SCNAvsDip != 0, ]
   df3 <- df3[df3$Gene_Symbol %in% df1$Gene_Symbol, ]
   df3 <- df3[df3$Gene_Symbol_COSMIC %in% df1$Gene_Symbol, ]
 
