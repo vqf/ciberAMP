@@ -244,7 +244,6 @@ ciberAMP <- function(genes = c(),
 
 #' Perform joint expression and copy-number variation analyses on a set of genes using a set of tumor samples.
 #'
-#' @param ciberAMP.res A variable with CiberAMP results
 #' @param res1 The first resulting data frame from CiberAMP outcomes
 #' @param res3 The third resulting data frame from CiberAMP outcomes
 #' @param width.window Number of base pairs to be analyzed in order to define genomic clusters
@@ -257,17 +256,20 @@ ciberAMP <- function(genes = c(),
 #' @export
 #'
 #' @examples
-CiberAMP.classifier <- function(ciberAMP.res = NULL, res1 = NULL, res3 = NULL, width.window = 1000000) {
+CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 1000000) {
 
   list.of.packages <- c("biomaRt", "BSgenome.Hsapiens.UCSC.hg19", "GenomicRanges", "dplyr", "karyoploteR", "diffloop")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   if(length(new.packages) > 0) {BiocManager::install(new.packages)}
+  require("biomaRt")
+  require("BSgenome.Hsapiens.UCSC.hg19")
+  require("GenomicRanges")
+  require("dplyr")
+  require("karyoploteR")
+  require("diffloop")
 
-  if(is.null(ciberAMP.res) && is.null(res1)) {
+  if(is.null(res1) | is.null(res3)) {
     print("You must provide a CiberAMP list of resulting dataframes to this function; or data frames 1 (SCN-associated DEGs) and 3 (Overlapping report)")
-  }else if(!is.null(ciberAMP.res)) {
-    df1 <- ciberAMP.res[[1]]
-    df3 <- ciberamp.res[[3]]
   }else{
     df1 <- res1
     df3 <- res3
