@@ -508,3 +508,19 @@ int.plot.CiberAMP <- function(df, int.df){
 
 }
 
+#' Get human gene symbols from biomaRt
+#'
+#' @return A data frame with information about all human genes taken from biomaRt: Chomosome, start and end position, strand and the HGNC gene symbol.
+#' @export
+
+all_human_genes <- function() {
+  list.of.packages <- c("biomaRt")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+  require("biomaRt")
+
+  ensembl <- useMart("ensembl")
+  ensembl <- useDataset("hsapiens_gene_ensembl",mart=ensembl)
+  all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), mart=ensembl)
+  all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
+}
