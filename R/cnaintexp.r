@@ -49,6 +49,14 @@ ciberAMP <- function(genes = c(),
   list.of.packages <- c("TCGAbiolinks", "SummarizedExperiment", "dplyr", "stringr", "RTCGAToolbox", "car", "EDASeq", "edgeR")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   if(length(new.packages) > 0) {BiocManager::install(new.packages)}
+  require("TCGAbiolinks")
+  require("SummarizedExperiment")
+  require("stringr")
+  require("dplyr")
+  require("RTCGAToolbox")
+  require("car")
+  require("EDASeq")
+  require("edgeR")
 
   cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
@@ -398,6 +406,12 @@ all_tumors <- function(){
 #' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
 #' @export
 ggplot.CiberAMP <- function(df.exp){
+  list.of.packages <- c("ggplot2", "dplyr")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+  require("ggplot2")
+  require("dplyr")
+
   ggplot(df.exp, aes(x = logFC, y = log2FC.SCNAvsDip, color = TCGA_Tumor)) + geom_point(aes(size = Pat.percentage), shape = ifelse(df.exp$Condition %in% "Group AMP vs Group DIPLOID", 17, 16)) + scale_colour_manual(values = c("ACC" = "#ffcccc", "BLCA" = "#ffd9cc", "BRCA" = "#ffe6cc", "CHOL" = "#fff2cc", "COAD" = "#ffffcc", "CESC" = "#f2ffcc", "DLBC" = "#e6ffcc", "ESCA" = "#d9ffcc", "GBM" = "#ccffcc", "HNSC" = "#ccffd9", "KIRC" = "#ccffe6", "KIRP" = "#ccfff2", "KICH" = "#ccffff", "LAML" = "#ccf2ff", "LIHC" = "#cce6ff", "LGG" = "#ccd9ff", "LUAD" = "#ccccff", "LUSC" = "#d9ccff", "MESO" = "#e6ccff", "OV" = "#f2ccff", "PAAD" ="#ffccff", "PCPG" = "#ffccf2", "PRAD" = "#ffcce6", "READ" = "#ffccd9", "SARC" = "#ffcccc", "SKCM" = "#ff6666", "STAD" = "#b366ff",  "TGCT" = "#668cff", "THCA" = "#ff8c66", "THYM" = "#ff0000", "UCEC" = "#848785", "UCS" = "#767676", "UVM" = "#86C0C3")) + scale_size_continuous(range = c(1,10)) + theme_minimal() + xlab("mRNA diff. exp. tumor vs normal samples (log2(FC))") + ylab("mRNA diff. exp. SCN-altered vs diploid tumor samples (log2(FC))")
 }
 
@@ -414,11 +428,10 @@ int.plot.CiberAMP <- function(df, int.df){
   list.of.packages <- c("shiny", "plotly", "DT", "dplyr")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   if(length(new.packages) > 0) {install.packages(new.packages)}
-
-  require(shiny)
-  require(plotly)
-  require(DT)
-  require(dplyr)
+  require("shiny")
+  require("plotly")
+  require("DT")
+  require("dplyr")
 
   cohorts.list = list("BLCA" = "BLCA", "ACC" = "ACC", "BRCA" = "BRCA", "CESC" = "CESC", "CHOL" = "CHOL", "COAD" = "COAD", "DLBC" = "DLBC", "ESCA" = "ESCA", "GBM" = "GBM", "HNSC" = "HNSC", "KICH" = "KICH", "KIRC" = "KIRC", "KIRP" = "KIRP", "LAML" = "LAML", "LGG" = "LGG", "LIHC" = "LIHC", "LUAD" = "LUAD", "LUSC" = "LUSC", "MESO" = "MESO", "OV" = "OV", "PAAD" = "PAAD", "PRAD" = "PRAD", "READ" = "READ", "SARC" = "SARC", "SKCM" = "SKCM", "STAD" = "STAD", "TGCT" = "TGCT", "THCA" = "THCA", "THYM" = "THYM", "UCEC" = "UCEC", "UCS" = "UCS", "UVM" = "UVM" )
   tumors <- .tumors_all()
