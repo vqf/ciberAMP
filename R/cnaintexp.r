@@ -512,7 +512,6 @@ int.plot.CiberAMP <- function(df, int.df){
 #'
 #' @return A data frame with information about all human genes taken from biomaRt: Chomosome, start and end position, strand and the HGNC gene symbol.
 #' @export
-
 all_human_genes <- function() {
   list.of.packages <- c("biomaRt")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
