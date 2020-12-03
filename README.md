@@ -14,13 +14,7 @@ Unlike other methods, CiberAMP provides information about:
 The SCN-associated differentially expressed genes (DEGs) reported by CiberAMP are:
   1º) classified regarding their co-amplification/deletion with any COSMIC CGC oncogene in the cohort
   2º) subclassified according to their genomic location inside SCN-associated DEGs enriched clusters in the tumor genome.
-  
-The algorithm defines the best candidate as a gene:
-  1) with a potential autonomous effect (so not co-amplified/deleted with other cancer related genes)
-  2) not located inside enriched genomic clusters
-  3) highly recurrent across the patients
-  4) with the largest significant SCN-associated transcriptional deregulation.
-  
+ 
 Finally, since CiberAMP classifies tumor samples SCNVs based on GISTIC2.0 outcomes, it allows the users to integrate the expression data from deeply or shallowly SCN-altered samples.
 
 ### Installation from GitHub ###
@@ -105,3 +99,30 @@ Finally, the x[[3]] data frame contains in each row a pair of genes which SCN-al
 * Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
 
 In these examples, x is the variable designed to contain CiberAMP results.
+
+------------------------------------------------------------------------
+
+# Looking into CiberAMP's logic classifier results
+
+The logic classification algorithm integrated in CiberAMP's package allows the user to rate the potential candidates subdividing them into four subgroups.
+
+First, the SCN-associated DEGs reported from the previous step are divided based on their significant genomic interactions with any COSMIC CGC oncogene in each cohort.
+Secondly, these genes are further subdivided regarding their genomic location inside or outside enriched genomic regions. 
+Finally, within each of the four resulting subgroups, genes are rated based on, first, their recurrency and, secondly, their SCN-associated FDR adjusted p-value.
+
+```r
+# Load the library
+library(ciberAMP)
+
+# Write your function
+x <- CiberAMP.classifier(res1 = NULL, res3 = NULL, width.window = 1000000)
+```
+Where:
+* *res1* The first data frame reported from the previous function
+* *res3* The third data frame reported from the previous function
+* *width.window* The window length in base pairs used for genomic enriched clusters calculation.
+
+The first data frame contains all the SCN-associated DEGs 1) NOT significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) NOT located inside genomic cluster.
+The second data frame contains all the SCN-associated DEGs 1) NOT significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) located inside genomic cluster.
+The third data frame contains all the SCN-associated DEGs 1) significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) NOT located inside genomic cluster.
+The fourth data frame contains all the SCN-associated DEGs 1) significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) located inside genomic cluster.
