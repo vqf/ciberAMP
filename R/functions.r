@@ -444,6 +444,71 @@ realTP <- NULL
 }
 
 # This function returns for each copy number altered gene all those cosmic ones highly correlating: 1) CN-altered samples overlap > 70% and 2) DE correlation
+
+.getSigPairs <- function(SCNA.DEG.result, cna, cna.thr, tumor) {
+  scn.degs <- as.character(SCNA.DEG.result[SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]$Gene_Symbol)
+  mutMat <- cna[,scn.degs, drop = FALSE]
+  mutMat <- as.matrix(mutMat)
+  if(cna.thr == "Deep") {
+    mutMat[mutMat == '-1'] <- '0'
+    mutMat[mutMat == '1'] <- '0'
+    mutMat[mutMat != '0'] <- '1'
+  }else if(cna.thr == "Shallow") {
+    mutMat[mutMat == '-2'] <- '0'
+    mutMat[mutMat == '2'] <- '0'
+    mutMat[mutMat != '0'] <- '1'
+  }else{
+    mutMat[mutMat != '0'] <- '1'
+  }
+  mutMat <- as.matrix(mutMat)
+  print("Calculating the interactions...")
+  interactions = sapply(1:ncol(mutMat), function(i) sapply(1:ncol(mutMat),
+                                                           function(j) {
+                                                             print(paste(colnames(mutMat)[i], colnames(mutMat)[j], sep="_"))
+                                                             f <- try(fisher.test(mutMat[, i], mutMat[, j]), silent = TRUE)
+                                                             if (class(f) == "try-error")
+                                                               NA
+                                                             else ifelse(f$estimate > 1, -log10(f$p.val), log10(f$p.val))
+                                                           }))
+  print("Calculating the odds ratio...")
+  oddsRatio <- oddsGenes <- sapply(1:ncol(mutMat), function(i) sapply(1:ncol(mutMat),
+                                                                      function(j) {
+                                                                        print(paste(colnames(mutMat)[i], colnames(mutMat)[j], sep="_"))
+                                                                        f <- try(fisher.test(mutMat[, i], mutMat[, j]), silent = TRUE)
+                                                                        if (class(f) == "try-error")
+                                                                          f = NA
+                                                                        else f$estimate
+                                                                      }))
+  rownames(interactions) = colnames(interactions) = rownames(oddsRatio) = colnames(oddsRatio) = colnames(mutMat)
+  sigPairs = which(x = 10^-abs(interactions) < max(0.01), arr.ind = TRUE)
+  sigPairsTbl = data.table::rbindlist(lapply(X = seq_along(1:nrow(sigPairs)),
+                                             function(i) {
+                                               x = sigPairs[i, ]
+                                               g1 = rownames(interactions[x[1], x[2], drop = FALSE])
+                                               g2 = colnames(interactions[x[1], x[2], drop = FALSE])
+                                               tbl = as.data.frame(table(apply(X = mutMat[, c(g1,g2), drop = FALSE], 1, paste, collapse = "")))
+                                               combn = data.frame(t(tbl$Freq))
+                                               colnames(combn) = tbl$Var1
+                                               pval = 10^-abs(interactions[x[1], x[2]])
+                                               fest = oddsRatio[x[1], x[2]]
+                                               d = data.table::data.table(gene1 = g1, gene2 = g2,pValue = pval, oddsRatio = fest)
+                                               d = cbind(d, combn)
+                                               d
+                                             }), fill = TRUE)
+
+  sigPairsTbl <- sigPairsTbl[sigPairsTbl$gene1 != sigPairsTbl$gene2, ]
+  sigPairsTbl <- sigPairsTbl[sigPairsTbl$gene2 %in% all_cosmic_genes(), ]
+  sigPairsTbl$Event <- ifelse(test = sigPairsTbl$oddsRatio > 1, yes = "Co_Occurence", no = "Mutually_Exclusive")
+  sigPairsTbl$pair = apply(X = sigPairsTbl[, c('gene1', 'gene2')], MARGIN = 1, FUN = function(x) paste(sort(unique(x)), collapse = ", "))
+  sigPairsTblSig <- sigPairsTbl[order(as.numeric(sigPairsTbl$pValue)) & !duplicated(sigPairsTbl$pair), ]
+  sigPairs.cosmic <- sigPairsTblSig[sigPairsTblSig$gene1 %in% all_cosmic_genes() | sigPairsTblSig$gene2 %in% all_cosmic_genes(), ]
+  sigPairs.cosmic$TCGA_Tumor <- rep(tumor, nrow(sigPairs.cosmic))
+  colnames(sigPairs.cosmic)[1] <- "Gene_Symbol"
+  colnames(sigPairs.cosmic)[2] <- "Gene_Symbol_COSMIC"
+  return(sigPairs.cosmic)
+}
+
+# This function returns for each copy number altered gene all those cosmic ones highly correlating: 1) CN-altered samples overlap > 70% and 2) DE correlation
 .getOverlapCOSMIC <- function(SCNA.DEG.result, genes, cosmic.genes) {
   int.matrix <- .setRowMatrix(0, colnames(SCNA.DEG.result))
   input <- SCNA.DEG.result[SCNA.DEG.result$Gene_Symbol %in% genes & SCNA.DEG.result$log2FC.SCNAvsDip != 0, ]

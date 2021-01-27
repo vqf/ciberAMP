@@ -49,6 +49,14 @@ ciberAMP <- function(genes = c(),
   list.of.packages <- c("TCGAbiolinks", "SummarizedExperiment", "dplyr", "stringr", "RTCGAToolbox", "car", "EDASeq", "edgeR")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   if(length(new.packages) > 0) {BiocManager::install(new.packages)}
+  require("TCGAbiolinks")
+  require("SummarizedExperiment")
+  require("stringr")
+  require("dplyr")
+  require("RTCGAToolbox")
+  require("car")
+  require("EDASeq")
+  require("edgeR")
 
   cosmic.genes <- all_cosmic_genes()
   genes <- as.character(genes)
@@ -220,12 +228,17 @@ ciberAMP <- function(genes = c(),
       }
     }
 
-    COSMIC.overlap <- .getOverlapCOSMIC(SCNA.DEG.result, genes, cosmic.genes)
+    #COSMIC.overlap <- .getOverlapCOSMIC(SCNA.DEG.result, genes, cosmic.genes)
+
+    print("Looking for co-amplified/deleted genes with any COSMIC CGC oncogene. This can take a while...")
+
+    COSMIC.sigPairs <- .getSigPairs(SCNA.DEG.result, cna, cna.thr, tumor)
+    COSMIC.sigPairs <- as.data.frame(COSMIC.sigPairs)
 
     if(is.null(COSMIC.ov.result)) {
-      COSMIC.ov.result <- COSMIC.overlap
+      COSMIC.ov.result <- COSMIC.sigPairs
     }else{
-      COSMIC.ov.result <- rbind(COSMIC.ov.result, COSMIC.overlap)
+      COSMIC.ov.result <- rbind(COSMIC.ov.result, COSMIC.sigPairs)
     }
 
   }
@@ -238,7 +251,7 @@ ciberAMP <- function(genes = c(),
     end <- list(EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% genes, ], EXPintCNA.results[EXPintCNA.results$Gene_Symbol %in% cosmic.genes, ], COSMIC.ov.result)
     return(end)
   }else{
-    print(paste0("Any queried gene was found significantly SCN-driven DE with the input parameters: log2(FC) thr.:", filt.FC, " FDR DEA thr.:", filt.FDR.DEA, " SCNA thr.:", cna.thr))
+    print(paste0("Any queried genes was found significantly SCN-driven DE with the input parameters: log2(FC) thr.:", filt.FC, " FDR DEA thr.:", filt.FDR.DEA, " SCNA thr.:", cna.thr, "Please, recheck gene symbol spelling."))
   }
 }
 
@@ -276,99 +289,346 @@ CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 1000000
   }
 
   df1 <- df1[df1$log2FC.SCNAvsDip != 0, ]
-  df3 <- df3[df3$Gene_Symbol %in% df1$Gene_Symbol, ]
-  df3 <- df3[df3$Gene_Symbol_COSMIC %in% df1$Gene_Symbol, ]
+  df3 <- as.data.frame(df3)
+  df3 <- df3[df3$Gene_Symbol %in% as.character(df1$Gene_Symbol), ]
+  df3 <- df3[df3$Gene_Symbol_COSMIC %in% as.character(df1$Gene_Symbol), ]
+  df3 <- df3[df3$Event %in% "Co_Occurence", ]
 
   tumors <- as.character(unique(df1$TCGA_Tumor))
 
   for(i in 1:length(tumors)) {
 
-    d <- df1[df1$TCGA_Tumor %in% tumors[i], ]
+    df3 <- df3[df3$Tumor %in% tumors[i], ]
 
-    over <- intersect(df1$Gene_Symbol, df3$Gene_Symbol)
+    if(nrow(df3) == 0) {
 
-    c11 <- d[d$Gene_Symbol %in% over, ]
-    c11$Group <- "Group2"
-    c12 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, over), ]
-    c12$Group <- "Group1"
-    d <- rbind(c11, c12)
+      d <- df1[df1$TCGA_Tumor %in% tumors[i], ]
 
-    ensembl = useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
-    all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = c('hgnc_symbol'), values = as.character(d$Gene_Symbol), mart=ensembl)
-    all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
-    all.genes <- all.genes[all.genes$chromosome_name %in% as.character(c(1:22, "X", "Y")), ]
-    d <- d[d$Gene_Symbol %in% all.genes$hgnc_symbol, ]
-    df3 <- df3[df3$Gene_Symbol %in% all.genes$hgnc_symbol, ]
-    data <- merge.data.frame(all.genes, d, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
-    data$Chromosome.location <- paste0(data$chromosome_name, data$band)
-    for(r in 1:nrow(data)) {
-      if(data$strand[r] < 0) {
-        data$strand[r] <- "-"
+      over <- as.character(df1[df1$Gene_Symbol %in% all_cosmic_genes(), ]$Gene_Symbol)
+
+      c11 <- d[d$Gene_Symbol %in% over, ]
+      if(nrow(c11) > 0) {
+        c11$Group <- "Group2"
       }else{
-        data$strand[r] <- "+"
+        c11 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c11) <- c(colnames(d), "Group")
       }
-    }
-    gr <- makeGRangesFromDataFrame(data, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"),  keep.extra.columns = TRUE, ignore.strand = FALSE)
-    gr <- addchr(gr)
 
-    gr.genome <- getGenomeAndMask(genome = "hg19", mask = NA)$genome
-    gr.genome <- filterChromosomes(gr.genome, organism = "hg19", chr.type = "canonical")
-    windows <- tileGenome(stats::setNames(stats::setNames(end(gr.genome), seqnames(gr.genome)), as.character(GenomeInfoDb::seqlevels(gr.genome))), tilewidth = width.window, cut.last.tile.in.chrom = TRUE)
-    dens <- countOverlaps(windows, gr)
-    print(paste(tumors[i], "mean elements per", width.window, "bases long cluster:", sep=" "))
-    print(mean(dens[dens>1]))
-    if(mean(dens[dens>1]) > 2) {
-      windows <- windows[which(dens > mean(dens[dens!=0])), ]
-    }else{
-      windows <- windows[which(dens > 2), ]
-    }
+      c12 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, over), ]
+      if(nrow(c12) > 0) {
+        c12$Group <- "Group1"
+      }else{
+        c12 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c12) <- c(colnames(d), "Group")
+      }
 
-    in.region <- subsetByOverlaps(gr, windows)
-    in.region <- as.character(in.region$hgnc_symbol)
+      d <- rbind(c11, c12)
 
-    for(j in 1:nrow(df3)) {
-      df3$Chr_1[j] <- as.character(all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$chromosome_name)
-      df3$Start_1[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$start_position
-      df3$End_1[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol[j], ]$end_position
-      df3$Chr_2[j] <- as.character(all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$chromosome_name)
-      df3$Start_2[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$start_position
-      df3$End_2[j] <- all.genes[all.genes$hgnc_symbol %in% df3$Gene_Symbol_COSMIC[j], ]$end_position
-    }
+      ensembl <- useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
+      all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = c('hgnc_symbol'), values = as.character(d$Gene_Symbol), mart=ensembl)
+      all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
+      all.genes <- all.genes[all.genes$chromosome_name %in% as.character(c(1:22, "X", "Y")), ]
+      d <- d[d$Gene_Symbol %in% all.genes$hgnc_symbol, ]
+      data <- merge.data.frame(all.genes, d, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+      data$Chromosome.location <- paste0(data$chromosome_name, data$band)
+      for(r in 1:nrow(data)) {
+        if(data$strand[r] < 0) {
+          data$strand[r] <- "-"
+        }else{
+          data$strand[r] <- "+"
+        }
+      }
+      gr <- makeGRangesFromDataFrame(data, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"),  keep.extra.columns = TRUE, ignore.strand = FALSE)
+      gr <- addchr(gr)
+      gr.genome <- getGenomeAndMask(genome = "hg19", mask = NA)$genome
+      gr.genome <- filterChromosomes(gr.genome, organism = "hg19", chr.type = "canonical")
+      windows <- tileGenome(stats::setNames(stats::setNames(end(gr.genome), seqnames(gr.genome)), as.character(GenomeInfoDb::seqlevels(gr.genome))), tilewidth = width.window, cut.last.tile.in.chrom = TRUE)
+      dens <- countOverlaps(windows, gr)
+      print(paste(tumors[i], "mean elements per", width.window, "bases long cluster:", sep=" "))
+      print(mean(dens[dens>1]))
 
-    clust.genes <- unique(c(in.region))
+      if(is.na(mean(dens[dens>1]))) {
+        windows <- NULL
+      }else if(mean(dens[dens>1]) > 2) {
+        windows <- windows[which(dens > mean(dens[dens!=0])), ]
+      }else if(mean(dens[dens>1]) <= 2) {
+        windows <- windows[which(dens >= 2), ]
+      }
 
-    c21 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group1", ]
-    c21$Group <- "Group1"
-    c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
-    c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
-    c22 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group1", ]
-    c22$Group <- "Group2"
-    c22 <- merge(all.genes, c22, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
-    c22 <- arrange(c22, -Pat.percentage, FDR.SCNAvsDip)
-    c23 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group2", ]
-    c23$Group <- "Group3"
-    c23 <- merge(all.genes, c23, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
-    c23 <- arrange(c23, -Pat.percentage, FDR.SCNAvsDip)
-    c24 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group2", ]
-    c24$Group <- "Group4"
-    c24 <- merge(all.genes, c24, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
-    c24 <- arrange(c24, -Pat.percentage, FDR.SCNAvsDip)
+      if(is.null(windows)) {
+        clust.genes <- NULL
+      }else{
+        in.region <- subsetByOverlaps(gr, windows)
+        in.region <- as.character(in.region$hgnc_symbol)
+        clust.genes <- unique(c(in.region))
+      }
 
-    if(i == 1) {
-      g1 <- c21
-      g2 <- c22
-      g3 <- c23
-      g4 <- c24
-    }else{
-      g1 <- rbind(g1, c21)
-      g2 <- rbind(g2, c22)
-      g3 <- rbind(g3, c23)
-      g4 <- rbind(g4, c24)
+      if(!is.null(clust.genes)) {
+
+        c21 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group %in% "Group1", , drop = FALSE]
+        if(nrow(c21) > 0) {
+          c21$Group <- "Group1"
+          c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c21 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c21) <- c(colnames(d), "Group")
+        }
+
+        c22 <- d[d$Gene_Symbol %in% clust.genes & d$Group %in% "Group1", , drop = FALSE]
+        if(nrow(c22) > 0) {
+          c22$Group <- "Group2"
+          c22 <- merge(all.genes, c22, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c22 <- arrange(c22, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c22 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c22) <- c(colnames(d), "Group")
+        }
+
+        c23 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group %in% "Group2", , drop = FALSE]
+        if(nrow(c23) > 0) {
+          c23$Group <- "Group3"
+          c23 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c23 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c23 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c23) <- c(colnames(d), "Group")
+        }
+
+        c24 <- d[d$Gene_Symbol %in% clust.genes & d$Group %in% "Group2", , drop = FALSE]
+        if(nrow(c24) > 0) {
+          c24$Group <- "Group4"
+          c24 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c24 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c24 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c24) <- c(colnames(d), "Group")
+        }
+
+        if(i == 1) {
+          g1 <- c21
+          g2 <- c22
+          g3 <- c23
+          g4 <- c24
+        }else{
+          g1 <- rbind(g1, c21)
+          g2 <- rbind(g2, c22)
+          g3 <- rbind(g3, c23)
+          g4 <- rbind(g4, c24)
+        }
+
+      }else if(is.null(clust.genes)) {
+
+        c21 <- d[d$Group %in% "Group1", , drop = FALSE]
+
+        print(c21)
+
+        if(nrow(c21) > 0) {
+          c21$Group <- "Group1"
+          c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c21 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c21) <- c(colnames(d), "Group")
+        }
+
+        c22 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c22) <- c(colnames(d), "Group")
+
+        c23 <- d[d$Group %in% "Group2", , drop = FALSE]
+        if(nrow(c23) > 0) {
+          c23$Group <- "Group3"
+          c23 <- merge(all.genes, c23, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c23 <- arrange(c23, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c23 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c23) <- c(colnames(d), "Group")
+        }
+
+        c24 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c24) <- c(colnames(d), "Group")
+
+        if(i == 1) {
+          g1 <- c21
+          g2 <- c22
+          g3 <- c23
+          g4 <- c24
+        }else{
+          g1 <- rbind(g1, c21)
+          g2 <- rbind(g2, c22)
+          g3 <- rbind(g3, c23)
+          g4 <- rbind(g4, c24)
+        }
+      }
+
+    }else {
+
+      d <- df1[df1$TCGA_Tumor %in% tumors[i], ]
+
+      over <- intersect(df1$Gene_Symbol, df3$Gene_Symbol)
+      over <- c(over, as.character(df1[df1$Gene_Symbol %in% all_cosmic_genes(), ]$Gene_Symbol))
+
+      c11 <- d[d$Gene_Symbol %in% over, ]
+      c11$Group <- "Group2"
+      c12 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, over), ]
+      c12$Group <- "Group1"
+      d <- rbind(c11, c12)
+
+      ensembl <- useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
+      all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = c('hgnc_symbol'), values = as.character(d$Gene_Symbol), mart=ensembl)
+      all.genes <- all.genes[all.genes$chromosome_name %in% as.character(c(1:22, "X", "Y")), ]
+      all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
+      d <- d[d$Gene_Symbol %in% all.genes$hgnc_symbol, ]
+      df3 <- df3[df3$Gene_Symbol %in% all.genes$hgnc_symbol, ]
+      data <- merge.data.frame(all.genes, d, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+      data$Chromosome.location <- paste0(data$chromosome_name, data$band)
+      for(r in 1:nrow(data)) {
+        if(data$strand[r] < 0) {
+          data$strand[r] <- "-"
+        }else{
+          data$strand[r] <- "+"
+        }
+      }
+      gr <- makeGRangesFromDataFrame(data, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"),  keep.extra.columns = TRUE, ignore.strand = FALSE)
+      gr <- addchr(gr)
+
+      gr.genome <- getGenomeAndMask(genome = "hg19", mask = NA)$genome
+      gr.genome <- filterChromosomes(gr.genome, organism = "hg19", chr.type = "canonical")
+      windows <- tileGenome(stats::setNames(stats::setNames(end(gr.genome), seqnames(gr.genome)), as.character(GenomeInfoDb::seqlevels(gr.genome))), tilewidth = width.window, cut.last.tile.in.chrom = TRUE)
+      dens <- countOverlaps(windows, gr)
+      print(paste(tumors[i], "mean elements per", width.window, "bases cluster:", sep=" "))
+      print(mean(dens[dens>1]))
+
+      if(is.na(mean(dens[dens>1]))) {
+        windows <- NULL
+      }else if(mean(dens[dens>1]) > 2) {
+        windows <- windows[which(dens > mean(dens[dens!=0])), ]
+      }else if(mean(dens[dens>1]) <= 2) {
+        windows <- windows[which(dens >= 2), ]
+      }
+
+      if(is.null(windows)) {
+        clust.genes <- NULL
+      }else{
+        in.region <- subsetByOverlaps(gr, windows)
+        in.region <- as.character(in.region$hgnc_symbol)
+        clust.genes <- unique(c(in.region))
+      }
+
+      if(!is.null(clust.genes)) {
+        c21 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group1", , drop = FALSE]
+        if(nrow(c21) > 0) {
+          c21$Group <- "Group1"
+          c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c21 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c21) <- c(colnames(d), "Group")
+        }
+
+        c22 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group1", , drop = FALSE]
+        if(nrow(c22) > 0) {
+          c22$Group <- "Group2"
+          c22 <- merge(all.genes, c22, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c22 <- arrange(c22, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c22 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c22) <- c(colnames(d), "Group")
+        }
+
+        c23 <- d[d$Gene_Symbol %in% setdiff(d$Gene_Symbol, clust.genes) & d$Group == "Group2", , drop = FALSE]
+        if(nrow(c23) > 0) {
+          c23$Group <- "Group3"
+          c23 <- merge(all.genes, c23, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c23 <- arrange(c23, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c23 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c23) <- c(colnames(d), "Group")
+        }
+
+        c24 <- d[d$Gene_Symbol %in% clust.genes & d$Group == "Group2", , drop = FALSE]
+        if(nrow(c24) > 0) {
+          c24$Group <- "Group4"
+          c24 <- merge(all.genes, c24, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c24 <- arrange(c24, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c24 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c24) <- c(colnames(d), "Group")
+        }
+
+        if(i == 1) {
+          g1 <- c21
+          g2 <- c22
+          g3 <- c23
+          g4 <- c24
+        }else{
+          g1 <- rbind(g1, c21)
+          g2 <- rbind(g2, c22)
+          g3 <- rbind(g3, c23)
+          g4 <- rbind(g4, c24)
+        }
+      }else if(is.null(clust.genes)) {
+        c21 <- d[d$Group == "Group1", , drop = FALSE]
+        if(nrow(c21) > 0) {
+          c21$Group <- "Group1"
+          c21 <- merge(all.genes, c21, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c21 <- arrange(c21, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c21 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c21) <- c(colnames(d), "Group")
+        }
+
+        c22 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c22) <- c(colnames(d), "Group")
+
+        c23 <- d[d$Group == "Group2", , drop = FALSE]
+        if(nrow(c23) > 0) {
+          c23$Group <- "Group3"
+          c23 <- merge(all.genes, c23, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
+          c23 <- arrange(c23, -Pat.percentage, FDR.SCNAvsDip)
+        }else{
+          c23 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+          colnames(c23) <- c(colnames(d), "Group")
+        }
+
+        c24 <- matrix(nrow = 0, ncol = ncol(d) + 1)
+        colnames(c24) <- c(colnames(d), "Group")
+
+        if(i == 1) {
+          g1 <- c21
+          g2 <- c22
+          g3 <- c23
+          g4 <- c24
+        }else{
+          g1 <- rbind(g1, c21)
+          g2 <- rbind(g2, c22)
+          g3 <- rbind(g3, c23)
+          g4 <- rbind(g4, c24)
+        }
+      }
     }
   }
   res <- list(g1, g2, g3, g4)
   return(res)
 }
+
+#' Calculated the pairs of genes significantly co-amplified/deleted and an associated p-value for such comparisons
+#'
+#' @param cohort A vector of TCGA cohort IDs to be analyzed.
+#' @param p.val.thr A threshold for significant pairs.
+#'
+#' @return List containing four data frames:
+#' 1 - Top candidates: SCN-associated DEGs with no co-amplification/deletion with a known oncogene and OUTSIDE a genomic cluster
+#' 2 - Second best candidates: SCN-associated DEGs with no co-amplification/deletion with a known oncogene and INSIDE a genomic cluster
+#' 3 - Third best candidates: SCN-associated DEGs co-amplified/deleted with a known oncogene and OUTSIDE a genomic cluster. This may contain COSMIC CGC oncogenes.
+#' 4 - Fourth best candidates: SCN-associated DEGs co-amplified/deleted with a known oncogene and INSIDE a genomic cluster. This contains COSMIC CGC oncogenes.
+#' @export
+#'
+#' @examples
+CiberAMP.coamp <- function(cohort = NULL, p.val.thr = NULL) {
+
+}
+
 
 #' Get available genes
 #'
@@ -398,6 +658,12 @@ all_tumors <- function(){
 #' @return ggplot2 graph where Y axis = mRNA diff. expression between SCN-altered vs diploit tumors and X axis = mRNA diff. expression between Tumor and Normal tissue
 #' @export
 ggplot.CiberAMP <- function(df.exp){
+  list.of.packages <- c("ggplot2", "dplyr")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+  require("ggplot2")
+  require("dplyr")
+
   ggplot(df.exp, aes(x = logFC, y = log2FC.SCNAvsDip, color = TCGA_Tumor)) + geom_point(aes(size = Pat.percentage), shape = ifelse(df.exp$Condition %in% "Group AMP vs Group DIPLOID", 17, 16)) + scale_colour_manual(values = c("ACC" = "#ffcccc", "BLCA" = "#ffd9cc", "BRCA" = "#ffe6cc", "CHOL" = "#fff2cc", "COAD" = "#ffffcc", "CESC" = "#f2ffcc", "DLBC" = "#e6ffcc", "ESCA" = "#d9ffcc", "GBM" = "#ccffcc", "HNSC" = "#ccffd9", "KIRC" = "#ccffe6", "KIRP" = "#ccfff2", "KICH" = "#ccffff", "LAML" = "#ccf2ff", "LIHC" = "#cce6ff", "LGG" = "#ccd9ff", "LUAD" = "#ccccff", "LUSC" = "#d9ccff", "MESO" = "#e6ccff", "OV" = "#f2ccff", "PAAD" ="#ffccff", "PCPG" = "#ffccf2", "PRAD" = "#ffcce6", "READ" = "#ffccd9", "SARC" = "#ffcccc", "SKCM" = "#ff6666", "STAD" = "#b366ff",  "TGCT" = "#668cff", "THCA" = "#ff8c66", "THYM" = "#ff0000", "UCEC" = "#848785", "UCS" = "#767676", "UVM" = "#86C0C3")) + scale_size_continuous(range = c(1,10)) + theme_minimal() + xlab("mRNA diff. exp. tumor vs normal samples (log2(FC))") + ylab("mRNA diff. exp. SCN-altered vs diploid tumor samples (log2(FC))")
 }
 
@@ -409,16 +675,17 @@ ggplot.CiberAMP <- function(df.exp){
 #'
 #' @return It allows the user to directly interact with data using a shiny app
 #' @export
-int.plot.CiberAMP <- function(df, int.df){
+int.plot.CiberAMP <- function(res1, res3){
 
   list.of.packages <- c("shiny", "plotly", "DT", "dplyr")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   if(length(new.packages) > 0) {install.packages(new.packages)}
-
-  require(shiny)
-  require(plotly)
-  require(DT)
-  require(dplyr)
+  require("shiny")
+  require("plotly")
+  require("DT")
+  require("dplyr")
+  df <- res1
+  int.df <- res3
 
   cohorts.list = list("BLCA" = "BLCA", "ACC" = "ACC", "BRCA" = "BRCA", "CESC" = "CESC", "CHOL" = "CHOL", "COAD" = "COAD", "DLBC" = "DLBC", "ESCA" = "ESCA", "GBM" = "GBM", "HNSC" = "HNSC", "KICH" = "KICH", "KIRC" = "KIRC", "KIRP" = "KIRP", "LAML" = "LAML", "LGG" = "LGG", "LIHC" = "LIHC", "LUAD" = "LUAD", "LUSC" = "LUSC", "MESO" = "MESO", "OV" = "OV", "PAAD" = "PAAD", "PRAD" = "PRAD", "READ" = "READ", "SARC" = "SARC", "SKCM" = "SKCM", "STAD" = "STAD", "TGCT" = "TGCT", "THCA" = "THCA", "THYM" = "THYM", "UCEC" = "UCEC", "UCS" = "UCS", "UVM" = "UVM" )
   tumors <- .tumors_all()
@@ -479,9 +746,9 @@ int.plot.CiberAMP <- function(df, int.df){
         a <- a[["key"]]
         a <- strsplit(as.character(a), split = "_")
         a <- unlist(a)
-        cosmic <- int.df[int.df$Gene_Symbol %in% a[1] & int.df$TCGA_Tumor %in% a[2], c("Gene_Symbol", "TCGA_Tumor", "Gene_Symbol_COSMIC", "PROP_GENE_COSMIC", "PROP_COSMIC_GENE")]
+        cosmic <- int.df[int.df$Gene_Symbol %in% a[1] & int.df$TCGA_Tumor %in% a[2], c("Gene_Symbol", "TCGA_Tumor", "Gene_Symbol_COSMIC", "pValue", "Event")]
         if(nrow(cosmic) > 0) {
-          DT::datatable(cosmic, options = list(scrollX = TRUE), rownames = FALSE) %>% formatRound(c("PROP_GENE_COSMIC", "PROP_COSMIC_GENE"), 2)
+          DT::datatable(cosmic, options = list(scrollX = TRUE), rownames = FALSE) %>% formatRound(c("pValue"), 8)
         }else{
           NULL
         }
@@ -495,3 +762,18 @@ int.plot.CiberAMP <- function(df, int.df){
 
 }
 
+#' Get human gene symbols from biomaRt
+#'
+#' @return A data frame with information about all human genes taken from biomaRt: Chomosome, start and end position, strand and the HGNC gene symbol.
+#' @export
+all_human_genes <- function() {
+  list.of.packages <- c("biomaRt")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages) > 0) {install.packages(new.packages)}
+  require("biomaRt")
+
+  ensembl <- useMart("ensembl")
+  ensembl <- useDataset("hsapiens_gene_ensembl",mart=ensembl)
+  all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), mart=ensembl)
+  all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
+}
