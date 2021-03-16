@@ -326,8 +326,8 @@ CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 1000000
 
       ensembl <- useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
       all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = c('hgnc_symbol'), values = as.character(d$Gene_Symbol), mart=ensembl)
-      all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
       all.genes <- all.genes[all.genes$chromosome_name %in% as.character(c(1:22, "X", "Y")), ]
+      all.genes <- all.genes[!duplicated(all.genes$hgnc_symbol), ]
       d <- d[d$Gene_Symbol %in% all.genes$hgnc_symbol, ]
       data <- merge.data.frame(all.genes, d, by.x = "hgnc_symbol", by.y = "Gene_Symbol")
       data$Chromosome.location <- paste0(data$chromosome_name, data$band)
