@@ -480,7 +480,7 @@ realTP <- NULL
                                                                         else f$estimate
                                                                       }))
   rownames(interactions) = colnames(interactions) = rownames(oddsRatio) = colnames(oddsRatio) = colnames(mutMat)
-  sigPairs = which(x = 10^-abs(interactions) < max(0.01), arr.ind = TRUE)
+  sigPairs = which(x = 10^-abs(interactions) < max(0.05), arr.ind = TRUE)
   sigPairsTbl = data.table::rbindlist(lapply(X = seq_along(1:nrow(sigPairs)),
                                              function(i) {
                                                x = sigPairs[i, ]
