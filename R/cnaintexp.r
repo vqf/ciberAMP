@@ -269,7 +269,7 @@ ciberAMP <- function(genes = c(),
 #' @export
 #'
 #' @examples
-CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 1000000) {
+CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 6000000) {
 
   list.of.packages <- c("biomaRt", "BSgenome.Hsapiens.UCSC.hg19", "GenomicRanges", "dplyr", "karyoploteR", "diffloop")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -298,7 +298,7 @@ CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 1000000
 
   for(i in 1:length(tumors)) {
 
-    df3 <- df3[df3$Tumor %in% tumors[i], ]
+    df3 <- df3[df3$TCGA_Tumor %in% tumors[i], ]
 
     if(nrow(df3) == 0) {
 
