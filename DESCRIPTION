@@ -13,7 +13,6 @@ Imports:
     GenomicRanges,
     karyoploteR,
     diffloop,
-    purrrogress,
     TCGAbiolinks,
     SummarizedExperiment,
     stringr,
