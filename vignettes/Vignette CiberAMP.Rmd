@@ -7,9 +7,9 @@ package: ciberAMP
 output:
   BiocStyle::html_document
 abstract: |
-   CiberAMP integrates somatic copy number alterations (SCNAs) and mRNA expression data from the TCGA cohorts. It consists in two differential expression analysis (DEA): 1) between tumor vs. normal samples (if available) and 2) SCN-altered and diploid tumor samples. Tumor samples are classified as deeply/shallowly amplified/deleted or diploid based on GISTIC2.0 thresholded-by-gene file.
-
-    Finally, CiberAMP calculates the % of SCN-altered samples between your queried genes and the COSMIC Cancer Gene Census (CGC) list of known oncodrivers.
+   CiberAMP is a new algorithm designed to integrate somatic copy number variations (SCNVs) and mRNA expression data using TCGA datasets. To do so, CiberAMP uses differential expression analyses that measures differences in gene expression levels between (1) tumor and normal samples, when the latter are available; and (2) copy number altered and diploid tumor tissues.
+   Additionally, CiberAMP performs two steps to analyze the genomic context of the identified SCNV-DEGs in each analyzed tumor cohort. Firstly, it calculates the co-occurrency between SCNV-DEGs copy number variations and known cancer driver genes amplifications and deletion. These cancer drivers are the ones collected in the COSMIC Cancer Gene Census (CGC). Secondly, the algorithm scans the tumor genome to calculate the average number of SCNV-DEGs per 6 megabases. With that information, it can locate which genomic positions harbor a number of SCNV-DEGs that is higher than the average proportion. These positions are called "enriched genomic clusters of SCNV-DEGs".
+   Finally, all the previous information is used to classify each SCNV-DEG according to (1) whether it is co-amplified or co-deleted with any known oncogene and (2) whether it is located within any of the identified enriched genomic clusters.
 
 vignette: |
   %\VignetteIndexEntry{CiberAMP}
@@ -20,7 +20,7 @@ runtime: shiny
 
 # Let's start!
 
-These are the packages CiberAMP depends on. They should be installed during the github CiberAMP installation:
+CiberAMP requires several packages that will be automatically installed:
 
 * `r Biocpkg("TCGAbiolinks")`, for TCGA data downloading, filtering, normalization and differential expression analysis (DEA).
 * `r Biocpkg("SummarizedExperiment")`, to manage RNAseq experiments data.
@@ -32,92 +32,49 @@ These are the packages CiberAMP depends on. They should be installed during the 
 
 # Gene query
 
-Now, it is time to define your queried-genes list. Whatever they will be, you must create a genes approved symbols vector, like this:
+The algorithm requires two mandatory inputs. The first one is a list of gene symbols to analyze. This can range from a single transcript to the whole set of human genes.
 
 ```{r, echo=TRUE}
 genes.of.interest <- c("GENEA", "GENEB", "GENEC", ...)
 ```
 
-In this mock case, we will study if recurrent chromosomal alterations in TCGA-HNSC and TCGA-LUSC cohorts contain SCN-driven DEGs. These cohorts share SCNAs at chromosomal positions 3p, 5p and 8p (amplifications) and 3q and 8q (deletions). 
+In this example, we will study which are genes are differentially expressed in association with their SCNVs in the cohort of head-and-neck and lung squamous cell carcinomas (TCGA-HNSC and TCGA-LUSC, respectively). In particular, we will focus our analysis on genes lodge at chromosomes 3, 5 and 8.
 
 # Getting genes from specific chromosomal locations
 
-So, first step is to reach out every gene lodged at chromosomes 3 and 8, and at chromosomal arm 5p. CiberAMP is focused in protein-coding genes only:
+The first step is to create a vector with the symbols of the genes that are located at chromosomes 3, 5 and 8:
 
 ```{r, echo=TRUE, width = 160, render=F}
 library(biomaRt)
 library(stringr)
-library(GenomicRanges)
 ```
 ```{r, echo=TRUE, width = 160}
 
-# First, we get all the genes at 3p, 3q, 5p, 8p and 8q chromosomal arms using biomaRt R package. For every gene, we will get its location, ensembl/hngc symbols and biotype (i.e. protein coding).
-ensembl <- useMart("ensembl")
-ensembl <- useDataset("hsapiens_gene_ensembl",mart=ensembl)
-all.genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'ensembl_gene_id', 'hgnc_symbol', 'ensembl_transcript_id', 'gene_biotype', 'transcript_biotype'), mart=ensembl)
-head(all.genes)
-all.genes$Chromosome.location <- paste0(all.genes$chromosome_name, all.genes$band)
-all.genes <- all.genes[all.genes$gene_biotype %in% "protein_coding", ]
-chr.regions <- c("3p", "3q", "5p", "8p", "8q")
-for(i in 1:length(chr.regions)) {
-  if(i == 1) {
-    reg.genes <- all.genes[grep(chr.regions[i], all.genes$Chromosome.location), ]
+# First, we get all the genes at chromosomes 3, 5 and 8 using the biomaRt R package. If you have the last version of R, the you can set "TRUE" the "useCache" argument in getBM function.
+
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl", mirror = "useast")
+genes <- getBM(attributes=c('chromosome_name', 'band', 'start_position', 'end_position', 'strand', 'hgnc_symbol'), filters = "chromosome_name", values = c("3", "5", "8"), mart=ensembl, useCache = FALSE)
+genes <- genes[genes$hgnc_symbol != "", ]
+genes <- genes[!duplicated(genes$hgnc_symbol), ]
+for(i in 1:nrow(genes)) {
+  if(genes$strand[i] < 0) {
+    genes$strand[i] <- "-"
   }else{
-    reg.genes <- rbind(reg.genes, all.genes[grep(chr.regions[i], all.genes$Chromosome.location), ])
+    genes$strand[i] <- "+"
   }
 }
-reg.genes <- reg.genes[reg.genes$chromosome_name %in% c(3,5,8), ]
-reg.genes <- reg.genes[!duplicated(reg.genes$ensembl_gene_id), ]
-for(i in 1:nrow(reg.genes)) {
-  if(reg.genes$strand[i] < 0) {
-    reg.genes$strand[i] <- "-"
-  }else{
-    reg.genes$strand[i] <- "+"
-  }
-}
-reg.genes <- reg.genes[reg.genes$hgnc_symbol != "", ]
-head(reg.genes)
-nrow(reg.genes)
-```
-
-*reg.genes* data frame contains 1870 genes mapped at the queried positions. Now, we will create a a Genomics Range object to plot all these genes at their locations using the `r Biocpkg("chromPlot")`. We can do it easily using makeGRangesFromDataFrame function (`r Biocpkg("GenomicRanges")`):
-
-```{r, echo=TRUE}
-library(GenomicRanges)
-gr <- makeGRangesFromDataFrame(reg.genes, seqnames.field = c("chromosome_name"), start.field = c("start_position"), end.field = c("end_position"), keep.extra.columns = TRUE, ignore.strand = FALSE)
-gr
-```
-
-Now, we can plot it in the human kariotype:
-
-```{r all_in_genes, fig.cap="Queried genes. This plot shows these 1870 protein-coding genes chromosomal locations and density", fig.wide=TRUE, echo=TRUE}
-library(chromPlot)
-data(hg_gap)
-chromPlot(gaps=hg_gap, annot1 = gr, chr = c(3,5,8))
 ```
 
 # Running CiberAMP
 
-It is the easiest thing ever. You only should provide:
-
-* A genes-of-interest character vector.
-* TCGA cohorts ID to be analyzed.
-* The minimum % of SCN-altered tumor samples to be analyzed.
-* A directory path the results will be saved at.
+Now, we have (1) the list of gene symbols to query and (2) the TCGA cohorts to analyze (TCGA-HNSC and TCGA-LUSC). CiberAMP also allows you to designate a path to save your results. By default, it will use the current working directory.
 
 ```{r, echo=TRUE, results="hide"}
 library(ciberAMP)
-#x <- ciberAMP(genes = reg.genes$hgnc_symbol, cohorts = c("LUSC", "HNSC"), pat.percentage = 0, writePath = "PATH_TO_FOLDER")
+# x <- ciberAMP(genes = reg.genes$hgnc_symbol, cohorts = c("LUSC", "HNSC"), pat.percentage = 0, *writePath = "PATH_TO_FOLDER"*)
 ```
 
-Since this is a computing expensive step, we provide the results along with CiberAMP package. You can extract them easily.
-
-```{r, echo=TRUE, results="hide"}
-library(ciberAMP)
-x <- ciberAMP:::my_data
-```
-
-In the case you have enough time to run it by yourself, you can find here a description of every CiberAMP's argument:
+However, there are many arguments that allow you to personalize your analysis:
 
 * genes Vector of approved queried genes symbols to be analyzed.
 * cohorts Vector of TCGA cohorts IDs. See function \code{all_tumors} for a list of available tumors. If it is left empty, CiberAMP will run on every cohort. You can consult the offical IDs at TCGA's web -> https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
@@ -136,11 +93,16 @@ In the case you have enough time to run it by yourself, you can find here a desc
 * exp.mat Custom normalized RNAseq counts expression matrix of only tumors. Defaults to `NULL`.
 * cna.mat Custom copy-number analysis matrix of only tumors. Defaults to `NULL`.
 
+In this example, we will run the analysis with default parameters:
+
+x <- ciberAMP(genes = as.character(genes$hgnc_symbol), cohorts = c("HNSC", "LUSC"))
+
+
 # Looking into CiberAMP results
 
 CiberAMP results into a list of 3 data frames that can be accessed by:
 
-The x[[1]] data frame contains differential expression results for queried genes:
+The x[[1]] data frame contains all differentially expressed genes between (1) tumor vs normal and (2) copy number altered vs diploid tumor samples:
 
 * Column 1 -> queried gene approved symbol.
 * Columns 2:4 -> queried genes tumor vs normal differential expression results.
@@ -162,7 +124,7 @@ The x[[2]] data frame containing CGC list differential expression results. Colum
 head(x[[2]][1, ])
 ```
 
-Finally, the x[[3]] data frame containing the % of tumor samples in which queried gene's SCN-driven differential expression co-occurs with any CGC oncodrivers' SCNAs:
+Finally, the x[[3]] data frame contains SCNVs co-occurrency between the SCNV-DEGs and known cancer driver genes amplification and deletions:
 
 * Column 1 -> queried gene approved symbol.
 * Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
@@ -179,7 +141,7 @@ Finally, the x[[3]] data frame containing the % of tumor samples in which querie
 * Column 19 -> % of overlapping queried and COSMIC CGC genes SCN-altered tumor samples.
 * Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
 
-```{r Overlap between query and COSMIC CGC genes CN-altered samples, fig.cap="SCNA-driven differentially expressed genes.", fig.wide=TRUE, echo=TRUE}
+```{r Significant co-amplifications and co-deletions between SCNV-DEGs and known cancer driver genes, fig.cap="SCNV-associated differentially expressed genes", fig.wide=TRUE, echo=TRUE}
 head(x[[3]][1, ])
 ```
 
