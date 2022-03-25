@@ -141,7 +141,7 @@ realTP <- NULL
 }
 
 # This function compares tumor vs normal expression differences and uses "edgeR::exactTest" function to assign significance to those comparisons: finds differentially expressed genes (DEGs)
-.getDataDEGs <- function(tumor, dataFilt, filt.FDR.DEA, FC){
+.getDataDEGs <- function(tumor, dataFilt, filt.FDR.DEA, filt.FC){
 
   samplesNT <- TCGAbiolinks::TCGAquery_SampleTypes(barcode = colnames(dataFilt),
                                                    typesample = c("NT"))
@@ -153,7 +153,7 @@ realTP <- NULL
                                             Cond1type = "Normal",
                                             Cond2type = "Tumor",
                                             fdr.cut = filt.FDR.DEA,
-                                            logFC.cut = FC,
+                                            logFC.cut = filt.FC,
                                             method = "exactTest")
 
   dataDEGs$Tumor <- rep(tumor, times = nrow(dataDEGs))
