@@ -1,21 +1,14 @@
 
 ------------------------------------------------------------------------
 
-# CiberAMP | An R package to integrate SCNVs and RNAseq data from TCGA.
+# CiberAMP | An R package to identify differential mRNA expression linked to somatic copy number variations in cancer datasets
 
-CiberAMP is a new R package that takes advantage of the R-coded count-based differential expression analysis (DEA) pipelines to associate significant transcriptional alterations to SCNVs in a cohort of tumors. The algorithm has been specially designed to be an easy-to-access tool for TCGA database, the largest in the world, with more than 11.000 tumor samples distributed across 33 different cancer datasets.
+CiberAMP is an R package that uses differential expression analyses to stablish accurate correlations between specific SCNVs and changes in expression in the genes affected by them. The algorithm has been designed to be an easy-to-access tool for the TCGA, the largest database in the world with genomic and transcriptomic data ofr more than 10,000 samples of 33 different human cancers.
 
-Unlike other methods, CiberAMP provides information about:
-  1) the transcriptional alterations between I) tumor vs normal and ii) SCN-altered vs diploid tumor samples
-  2) the SCNVs recurrencies across the cohort
-  3) the genomic context these changes are embedded in
-  4) a rated list of top candidates based on a novel logic classification algorithm.
-
-The SCN-associated differentially expressed genes (DEGs) reported by CiberAMP are:
-  1º) classified regarding their co-amplification/deletion with any COSMIC CGC oncogene in the cohort
-  2º) subclassified according to their genomic location inside SCN-associated DEGs enriched clusters in the tumor genome.
- 
-Finally, since CiberAMP classifies tumor samples SCNVs based on GISTIC2.0 outcomes, it allows the users to integrate the expression data from deeply or shallowly SCN-altered samples.
+Unlike other methods, CiberAMP can yield information on:
+  (i) SCNV-DEGs (somatic copy number variations associated differentially expressed genes) in a cohort of TCGA tumor samples
+  (ii) The type of copy number variation associated with each SCNV-DEG in terms of expression pattern and genomic context
+  (iii) Insights on the potential functional relevance of each identified SCNV-DEG
 
 ### Installation from GitHub ###
 
@@ -45,19 +38,19 @@ x <- ciberAMP(genes = c(), cohorts = c(), pat.percentage = 0, writePath = "PATH_
 
 Where:
 
-* *genes* Your genes of interest approved symbols. This should be a character vector.
-* *cohorts* By default, CiberAMP will compute every TCGA cohort (the 32 available), but you can use this argument to only analyze a few. You can consult the offical codes at TCGA's web: https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
-* *writePath* The folder path to save the results. TIP: if you want to re-run CiberAMP, if you use the same folder where all data was stored, you will never need to re-download it again what saves a lot of time and disk space! But, be careful, your results will be overwritten in every run!
-* *pat.percentage* The minimum % of SCN-altered patients that should be considered to look for SCNA-driven differential expression.
-* *pp.cor.cut* Threshold to filter samples by array-array intensity correlation (AICC) analysis. Passed to `TCGAanalyze_Preprocessing`.
+* *genes* The list of genes of interest. It is a vector of gene official symbols according to the HGNC.
+* *cohorts* The list of TCGA cohorts to be analyzed. By default, CiberAMP will be run on all TCGA cohorts. You can consult the official TCGA cohort IDs here: https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations or in CiberAMP's manuscript (Table S1)
+* *writePath* The path to the folder to save results TIP: if you want to re-run CiberAMP, if you use the same folder where all data was stored, you will not need re-download all data from the TCGA again. This can save you a lot of space in your disk, but be careful, results will be overwritten as well.
+* *pat.percentage* The minimum % of copy number altered samples per gene that will be analyzed.
+* *pp.cor.cut* Threshold to filter samples by array-array intensity correlation (AICC) analysis (0.6 by default). Passed to `TCGAanalyze_Preprocessing`.
 * *norm.method* Method of normalization, such as `gcContent` or `geneLength` (default). See TCGAbiolinks R package for help.
 * *filt.method* Method of filtering, such as `quantile` (default), `varFilter`, `filter1`, `filter2`. See TCGAbiolinks R package for help.
 * *filt.qnt.cut* Threshold selected as quantile for filtering. Defaults to 0.25 (first quantile).
-* *filt.var.func* Filtering function. Defaults to `IQR`. See `genefilter` documentation for available methods. See TCGAbiolinks R package for help.
+* *filt.var.func* Filtering function. Defaults to `IQR`. See `genefilter` documentation for available methods.
 * *filt.var.cutoff* Threshold for `filt.var.funct`. See TCGAbiolinks R package for help.
 * *filt.eta* Parameter for `filter1`. Defaults to 0.05. See TCGAbiolinks R package for help.
 * *filt.FDR.DEA* Threshold to filter differentially expressed genes according their corrected p-value.
-* *filt.FC* Minimum log2(FC) value to considered a gene as differentially expressed. Defaults to 1.
+* *filt.FC* Minimum log2(FC) value to considered a gene as differentially expressed. Defaults to 0.58 (that corresponds to a differential expression of at least 50%).
 * *cna.thr* Threshold level for copy-number variation analysis. Can be `Deep`, `Shallow` or `Both`
 * *exp.mat* Custom normalized RNAseq counts expression matrix of only tumors. Defaults to `NULL`.
 * *cna.mat* Custom copy-number analysis matrix of only tumors. Defaults to `NULL`.
@@ -68,7 +61,7 @@ Where:
 
 CiberAMP returns a list of 3 data frames:
 
-The x[[1]] data frame contains user's queried genes with a SCN-associated transcriptional deregulation:
+The x[[1]] data frame contains all DEGs and SCNV-DEGs detected:
 
 * Column 1 -> queried gene approved symbol.
 * Columns 2:4 -> queried genes tumor vs normal differential expression results.
@@ -79,9 +72,9 @@ The x[[1]] data frame contains user's queried genes with a SCN-associated transc
 * Column 12  -> % of samples SCN-altered.
 * Column 14 -> SCN-altered TCGA sample barcodes.
 
-The x[[2]] data frame contains COSMIC CGC oncogenes with a SCN-associated transcriptional deregulation. The columns are exactly the same as in the previous one.
+The x[[2]] data frame contains COSMIC CGC oncogenes with a SCN-associated transcriptional deregulation. The columns are the same as in the previous one.
 
-Finally, the x[[3]] data frame contains in each row a pair of genes which SCN-altered samples showed a similitude higher than 70% (co-amplified/deleted) with a knwon COSMIC CGC oncogene.
+Finally, the x[[3]] data frame contains all significant concurrent amplifications and deletions of each SCNV-DEG with known cancer driver genes:
 
 * Column 1 -> queried gene approved symbol.
 * Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
