@@ -115,7 +115,4 @@ Where:
 * *res3* The third data frame reported from the previous function
 * *width.window* The window length in base pairs used for genomic enriched clusters calculation.
 
-The first data frame contains all the SCN-associated DEGs 1) NOT significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) NOT located inside genomic cluster.
-The second data frame contains all the SCN-associated DEGs 1) NOT significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) located inside genomic cluster.
-The third data frame contains all the SCN-associated DEGs 1) significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) NOT located inside genomic cluster.
-The fourth data frame contains all the SCN-associated DEGs 1) significantly co-amplified/deleted with any COSMIC CGC oncogene and 2) located inside genomic cluster.
+The outcomes of this function is a list of 4 data frames. The first data frame contains all the SCNV-DEGs that are not co-amplified or co-deleted with any known cancer driver gene and outside any enriched cluster. The second data frame conatins all SCNV-DEGs that are not co-amplified or co-deleted with any known cancer driver gene and located within an enriched cluster. The third data frame containes all SCNV-DEGs that are co-amplified or co-deleted with a known cancer driver gene and outside any enriched cluster. The fourth data frame contains all SCNV-DEGs that are co-amplified or co-deleted with a known cancer driver gene and within an enriched gene cluster.
