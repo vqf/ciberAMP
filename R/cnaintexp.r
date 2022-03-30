@@ -83,6 +83,8 @@ ciberAMP <- function(genes = c(),
     tumor <- cohorts[i]
     if(tumor %in% tumors) {
       print(paste("Analyzing ", tumor, "...", sep=""))
+    }else if(is.null(exp.mat) && is.null(cna.mat)) {
+      print("Analyzing a non-TCGA cohort")
     }else{
       print(paste("The introduced cohort: ", tumor, " was not found among the available TCGA cohorts. Bad-spelling is a common mistake, please check it or select any of the available ones.", sep=""))
       next
