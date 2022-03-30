@@ -61,20 +61,18 @@ Where:
 
 CiberAMP returns a list of 3 data frames:
 
-The x[[1]] data frame contains all DEGs and SCNV-DEGs detected:
+The first data frame contains all SCNV-DEGs and genes differentially expressed between tumor and normal samples exclusively. The secon data frame contains all the SCNV-DE known cancer drivers. These two data frames have the same format and in each column we can find:
 
-* Column 1 -> queried gene approved symbol.
-* Columns 2:4 -> queried genes tumor vs normal differential expression results.
-* Column 5 -> TCGA cohort ID.
-* Column 6:9 -> queried gene SCN-altered vs. diploid tumor samples differential expression results.
-* Column 10  -> TCGA cohort.
-* Column 11  -> SCN-altered vs. diploid tumor samples comparison: amplified vs. diploid or deleted vs. diploid.
-* Column 12  -> % of samples SCN-altered.
-* Column 14 -> SCN-altered TCGA sample barcodes.
+* Column 1 -> Gene approved symbols
+* Columns 2:4 -> Results from the differential expression analysis between tumor and healthy samples.
+* Column 5 -> ID of the queried TCGA cohort.
+* Column 6:9 -> Results from the differential expression analysis between copy number altered and diploid tumor samples.
+* Column 10  -> ID of the queried TCGA cohort.
+* Column 11  -> The type of comparison made: amplified vs. diploid or deleted vs. diploid.
+* Column 12  -> Recurrence of gene amplifications or deletions in the cohort.
+* Column 14 -> Barcodes of the samples harboring such SCNVs.
 
-The x[[2]] data frame contains COSMIC CGC oncogenes with a SCN-associated transcriptional deregulation. The columns are the same as in the previous one.
-
-Finally, the x[[3]] data frame contains all significant concurrent amplifications and deletions of each SCNV-DEG with known cancer driver genes:
+The third data frame contains the information about the significant co-occurring amplification or deletions between the SCNV-DEGs and known cancer drivers:
 
 * Column 1 -> queried gene approved symbol.
 * Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
@@ -91,8 +89,6 @@ Finally, the x[[3]] data frame contains all significant concurrent amplification
 * Column 19 -> % of overlapping queried and COSMIC CGC genes SCN-altered tumor samples.
 * Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
 
-In these examples, x is the variable designed to contain CiberAMP results.
-
 ------------------------------------------------------------------------
 
 # Looking into CiberAMP's logic classifier results
@@ -108,7 +104,7 @@ Finally, within each of the four resulting subgroups, genes are rated based on, 
 library(ciberAMP)
 
 # Write your function
-x <- CiberAMP.classifier(res1 = NULL, res3 = NULL, width.window = 1000000)
+x <- CiberAMP.classifier(res1 = NULL, res3 = NULL, width.window = 6000000)
 ```
 Where:
 * *res1* The first data frame reported from the previous function
