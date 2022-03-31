@@ -706,8 +706,8 @@ int.plot.CiberAMP <- function(res1, res3){
         actionButton("submit", "Submit"),
         sliderInput("pat.perc", "Select the minimum copy number altered samples", value = 10, min = 0, max = 100),
         numericInput("p.val.thr", "Select the adjusted p-value threshold.", value = 0.05, min = 0, max = 1),
-        numericInput("tvsn.fc.thr", "Select the minimum fold-change threshold when compare tumor vs normal samples.", value = 0, min = 0, max = Inf),
-        numericInput("cna.fc.thr", "Select the minimum fold-change threshold when compare CNA vs diploid samples.", value = 0, min = 0, max = Inf),
+        numericInput("tvsn.fc.thr", "Select the minimum fold-change threshold for X axis", value = 0, min = 0, max = Inf),
+        numericInput("cna.fc.thr", "Select the minimum fold-change threshold for Y axis", value = 0, min = 0, max = Inf),
         width = 3
       ),
 
