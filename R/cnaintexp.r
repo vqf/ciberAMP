@@ -271,7 +271,7 @@ ciberAMP <- function(genes = c(),
 #' @export
 #'
 #' @examples
-CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 6000000) {
+CiberAMP.classifier <- function(res1 = NULL, res3 = NULL, width.window = 10000000) {
 
   list.of.packages <- c("biomaRt", "BSgenome.Hsapiens.UCSC.hg19", "GenomicRanges", "dplyr", "karyoploteR", "diffloop")
   new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
