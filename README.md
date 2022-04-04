@@ -74,20 +74,14 @@ The first data frame contains all SCNV-DEGs and genes differentially expressed b
 
 The third data frame contains the information about the significant co-occurring amplification or deletions between the SCNV-DEGs and known cancer drivers:
 
-* Column 1 -> queried gene approved symbol.
-* Column 2:5 -> queried gene copy number altered vs. diploid tumor samples DE results.
-* Column 6 -> TCGA cohort ID.
-* Column 7 -> SCN-altered vs. diploid tumor samples comparison type: amplified vs. diploid or deleted vs. diploid.
-* Column 8 -> % of tumor SCN-altered samples for a queried gene.
-* Column 9 -> queried gene SCN-altered TCGA tumor samples' barcodes.
-* Column 10 -> COSMIC CGC gene approved symbol.
-* Column 11:14 -> COSMIC CGC gene copy number altered vs. diploid tumor samples DE results.
-* Column 15 -> TCGA cohort ID.
-* Column 16 -> SCN-altered vs. diploid tumor samples comparison type: amplified vs diploid or deleted vs diploid.
-* Column 17 -> % of tumor SCN-altered samples for a COSMIC CGC gene.
-* Column 18 -> COSMIC CGC gene SCN-altered TCGA tumor samples' barcodes.
-* Column 19 -> % of overlapping queried and COSMIC CGC genes SCN-altered tumor samples.
-* Column 20 -> % of overlapping COSMIC CGC and queried genes SCN-altered tumor samples.
+* Column 1 -> queried gene approved symbol
+* Column 2 -> cancer driver gene approved symbol
+* Column 3 -> p-value of the comparison
+* Column 4 -> oddsRatio of the comparison
+* Column 8-11 -> number of samples with (1) or without (0) SCNVs of each gene of the pair compared
+* Column 12 -> type of interaction (Co-occurrence or Mutual exclusivity)
+* Column 13 -> gene symbols of the pair of genes compared
+* Column 14 -> TCGA cohort ID.
 
 ------------------------------------------------------------------------
 
@@ -104,7 +98,7 @@ Finally, within each of the four resulting subgroups, genes are rated based on, 
 library(ciberAMP)
 
 # Write your function
-x <- CiberAMP.classifier(res1 = NULL, res3 = NULL, width.window = 6000000)
+x <- CiberAMP.classifier(res1 = NULL, res3 = NULL, width.window = 10000000)
 ```
 Where:
 * *res1* The first data frame reported from the previous function
